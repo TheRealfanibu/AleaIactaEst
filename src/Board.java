@@ -15,16 +15,18 @@ public class Board {
     };
 
     private final Field[][] boardFields;
+    private final List<Field> allFields;
 
     private final List<Piece> piecesOnBoard = new LinkedList<>();
 
     public Board() {
         boardFields = new Field[7][7];
+        allFields = new LinkedList<>();
         initField();
 
-        Piece piece = PieceCollection.ALL_PIECES[0];
+        Piece piece = PieceCollection.ALL_PIECES[1];
 
-        placePieceOnBoard(piece, piece.getOrientations()[0], 1,2);
+        placePieceOnBoard(piece, piece.getOrientations()[3], 1,2);
 
         piecesOnBoard.add(piece);
     }
@@ -41,12 +43,22 @@ public class Board {
     private void initField() {
         for (int i = 0; i < 7; i++) {
             for (int j = 0; j < 7; j++) {
-                boardFields[i][j] = new Field(i, j, NUMBERS[i][j]);
+                Field field = new Field(i, j, NUMBERS[i][j]);
+                boardFields[i][j] = field;
+                allFields.add(field);
             }
         }
     }
 
     public List<Piece> getPiecesOnBoard() {
         return piecesOnBoard;
+    }
+
+    public Field[][] getBoardFields() {
+        return boardFields;
+    }
+
+    public List<Field> getAllFields() {
+        return allFields;
     }
 }
