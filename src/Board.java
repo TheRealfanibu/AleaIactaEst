@@ -26,14 +26,16 @@ public class Board {
 
         Piece piece1 = PieceCollection.ALL_PIECES[1];
         Piece piece2 = PieceCollection.ALL_PIECES[4];
+        Piece piece3 = PieceCollection.ALL_PIECES[3];
 
         placePieceOnBoard(piece1, piece1.getOrientations()[3], 1,2);
-        placePieceOnBoard(piece2, piece2.getOrientations()[0], 4,4);
+        placePieceOnBoard(piece2, piece2.getOrientations()[1], 4,4);
+        placePieceOnBoard(piece3, piece3.getOrientations()[1], 4,0);
     }
 
     private void placePieceOnBoard(Piece piece, PieceOrientation orientation, int rowOffset, int columnOffset) {
         var occupiedFields = Arrays.stream(orientation.getPositions())
-                .map(piecePosition -> boardFields[piecePosition.row() + rowOffset][piecePosition.column() + columnOffset])
+                .map(partialPiecePos -> getFieldOnBoard(partialPiecePos.row() + rowOffset, partialPiecePos.column() + columnOffset))
                 .toList();
 
         occupiedFields.forEach(field -> field.setOccupationPiece(piece));
