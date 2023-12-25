@@ -1,6 +1,6 @@
 public class Field {
 
-    private boolean occupied;
+    private Piece occupationPiece;
 
     private final FieldPosition position;
     private final int number;
@@ -8,23 +8,38 @@ public class Field {
     public Field(int row, int column, int number) {
         this.number = number;
         position = new FieldPosition(row, column);
-        occupied = false;
+    }
+
+    public int getTopLeftCornerXCoordinate() {
+        return position.column() * MainFrame.FIELD_SIZE;
+    }
+
+    public int getTopLeftCornerYCoordinate() {
+        return position.row() * MainFrame.FIELD_SIZE;
     }
 
     public boolean isOccupied() {
-        return occupied;
+        return occupationPiece != null;
     }
 
-    public void setOccupied(boolean occupied) {
-        this.occupied = occupied;
+    public void setOccupationPiece(Piece occupationPiece) {
+        this.occupationPiece = occupationPiece;
+    }
+
+    public Piece getOccupationPiece() {
+        return occupationPiece;
     }
 
     public int getNumber() {
         return number;
     }
 
-    public FieldPosition getPosition() {
-        return position;
+    public int getRow() {
+        return position.row();
+    }
+
+    public int getColumn() {
+        return position.column();
     }
 
 }

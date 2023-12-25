@@ -24,11 +24,11 @@ public class Board {
         allFields = new LinkedList<>();
         initField();
 
-        Piece piece = PieceCollection.ALL_PIECES[1];
+        Piece piece1 = PieceCollection.ALL_PIECES[1];
+        Piece piece2 = PieceCollection.ALL_PIECES[4];
 
-        placePieceOnBoard(piece, piece.getOrientations()[3], 1,2);
-
-        piecesOnBoard.add(piece);
+        placePieceOnBoard(piece1, piece1.getOrientations()[3], 1,2);
+        placePieceOnBoard(piece2, piece2.getOrientations()[0], 4,4);
     }
 
     private void placePieceOnBoard(Piece piece, PieceOrientation orientation, int rowOffset, int columnOffset) {
@@ -36,8 +36,10 @@ public class Board {
                 .map(piecePosition -> boardFields[piecePosition.row() + rowOffset][piecePosition.column() + columnOffset])
                 .toList();
 
-        occupiedFields.forEach(field -> field.setOccupied(true));
+        occupiedFields.forEach(field -> field.setOccupationPiece(piece));
         piece.setOccupiedFields(occupiedFields);
+
+        piecesOnBoard.add(piece);
     }
 
     private void initField() {
@@ -54,8 +56,8 @@ public class Board {
         return piecesOnBoard;
     }
 
-    public Field[][] getBoardFields() {
-        return boardFields;
+    public Field getFieldOnBoard(int row, int column) {
+        return boardFields[row][column];
     }
 
     public List<Field> getAllFields() {
