@@ -42,10 +42,10 @@ public class MainFrame extends Application {
 
     private void initCanvas() {
         graphics.setFill(Color.BEIGE);
-        graphics.fillRect(0,0, CANVAS_SIZE, CANVAS_SIZE);
+        graphics.fillRect(0, 0, CANVAS_SIZE, CANVAS_SIZE);
         graphics.setFill(Color.BLACK);
         graphics.setLineWidth(3);
-        graphics.strokeRect(0,0, CANVAS_SIZE, CANVAS_SIZE);
+        graphics.strokeRect(0, 0, CANVAS_SIZE, CANVAS_SIZE);
     }
 
     private void drawBoard() {
@@ -101,7 +101,8 @@ public class MainFrame extends Application {
 
         graphics.setFill(Color.SADDLEBROWN);
         occupiedFields.forEach(field ->
-                graphics.fillRect(field.getTopLeftCornerXCoordinate(), field.getTopLeftCornerYCoordinate(), FIELD_SIZE, FIELD_SIZE));
+                graphics.fillRect(field.getTopLeftCornerXCoordinate(), field.getTopLeftCornerYCoordinate(),
+                        FIELD_SIZE, FIELD_SIZE));
         drawPieceBounds(piece, 10);
         drawPieceBounds(piece, 17);
     }
@@ -109,38 +110,58 @@ public class MainFrame extends Application {
     private void drawPieceBounds(Piece piece, int gap) {
         graphics.setStroke(Color.BLACK);
         graphics.setLineWidth(2);
-        for(Field field : piece.getOccupiedFields()) {
-            for(Direction direction : Direction.values()) {
+        for (Field field : piece.getOccupiedFields()) {
+            for (Direction direction : Direction.values()) {
                 drawSideConnection(field, piece, direction, gap);
             }
         }
     }
 
     private void drawSideConnection(Field field, Piece piece, Direction baseDirection, int gap) {
-        if(!isAdjacentFieldPartOfPiece(field, piece, baseDirection)) {
-            int leftX = getLeftXOfField(field, gap);
-            int rightX = getRightXOfField(field, gap);
-            int topY = getTopYOfField(field, gap);
-            int bottomY = getBottomYOfField(field, gap);
+        if (!isAdjacentFieldPartOfPiece(field, piece, baseDirection)) {
+            int gapLineStartX = getStartX(field, baseDirection, gap);
+            int gapLineStartY = getStartY(field, baseDirection, gap);
+            int gapLineEndX = getEndX(field, baseDirection, gap);
+            int gapLineEndY = getEndY(field, baseDirection, gap);
 
-            int baseLineStartX = baseDirection != Direction.RIGHT ? leftX : rightX;
-            int baseLineEndX = baseDirection != Direction.LEFT ? rightX : leftX;
-            int baseLineStartY = baseDirection != Direction.DOWN ? topY : bottomY;
-            int baseLineEndY = baseDirection != Direction.UP ? bottomY : topY;
+            graphics.strokeLine(gapLineStartX, gapLineStartY, gapLineEndX, gapLineEndY);
 
-            graphics.strokeLine(baseLineStartX, baseLineStartY, baseLineEndX, baseLineEndY);
+            /*graphics.setLineWidth(1);
+            graphics.strokeLine(getStartX(field, baseDirection, 0), getStartY(field, baseDirection, 0),
+                    getEndX(field, baseDirection, 0), getEndY(field, baseDirection, 0));
+            graphics.setLineWidth(2);*/
 
             Direction firstAdjacentDirection = baseDirection == Direction.DOWN || baseDirection == Direction.UP
                     ? Direction.LEFT : Direction.UP;
             Direction secondAdjacentDirection = baseDirection == Direction.DOWN || baseDirection == Direction.UP
                     ? Direction.RIGHT : Direction.DOWN;
-            drawOneSideConnection(field, piece, baseDirection, firstAdjacentDirection, baseLineStartX, baseLineStartY, gap);
-            drawOneSideConnection(field, piece, baseDirection, secondAdjacentDirection, baseLineEndX, baseLineEndY, gap);
+            drawOneSideConnection(field, piece, baseDirection, firstAdjacentDirection, gapLineStartX, gapLineStartY, gap);
+            drawOneSideConnection(field, piece, baseDirection, secondAdjacentDirection, gapLineEndX, gapLineEndY, gap);
         }
     }
 
+    private int getStartX(Field field, Direction direction, int gap) {
+        return direction != Direction.RIGHT ? field.getTopLeftCornerXCoordinate() + gap :
+                field.getTopLeftCornerXCoordinate() + FIELD_SIZE - gap;
+    }
+
+    private int getEndX(Field field, Direction direction, int gap) {
+        return direction != Direction.LEFT ? field.getTopLeftCornerXCoordinate() + FIELD_SIZE - gap :
+                field.getTopLeftCornerXCoordinate() + gap;
+    }
+
+    private int getStartY(Field field, Direction direction, int gap) {
+        return direction != Direction.DOWN ? field.getTopLeftCornerYCoordinate() + gap :
+                field.getTopLeftCornerYCoordinate() + FIELD_SIZE - gap;
+    }
+
+    private int getEndY(Field field, Direction direction, int gap) {
+        return direction != Direction.UP ? field.getTopLeftCornerYCoordinate() + FIELD_SIZE - gap :
+                field.getTopLeftCornerYCoordinate() + gap;
+    }
+
     private void drawOneSideConnection(Field field, Piece piece, Direction baseDirection, Direction adjacentDirection, int startX, int startY, int gap) {
-        if(isAdjacentFieldPartOfPiece(field, piece, adjacentDirection)) {
+        if (isAdjacentFieldPartOfPiece(field, piece, adjacentDirection)) {
             graphics.strokeLine(startX, startY, startX + adjacentDirection.columnOffset * gap, startY + adjacentDirection.rowOffset * gap);
             drawArcConnection(field, piece, baseDirection, adjacentDirection, gap);
         }
@@ -148,7 +169,7 @@ public class MainFrame extends Application {
 
     private void drawArcConnection(Field field, Piece piece, Direction baseDirection, Direction adjacentDirection,
                                    int gap) {
-        if((baseDirection == Direction.DOWN || baseDirection == Direction.UP) &&
+        if ((baseDirection == Direction.DOWN || baseDirection == Direction.UP) &&
                 isDiagonalFieldPartOfPiece(field, piece, baseDirection, adjacentDirection)) {
             int arcStartX = field.getTopLeftCornerXCoordinate() - gap;
             int arcStartY = field.getTopLeftCornerYCoordinate() - gap;
@@ -162,13 +183,12 @@ public class MainFrame extends Application {
             }
             if (baseDirection == Direction.DOWN && adjacentDirection == Direction.RIGHT) {
                 startAngle = 0;
-            } else if(baseDirection == Direction.DOWN && adjacentDirection == Direction.LEFT) {
+            } else if (baseDirection == Direction.DOWN && adjacentDirection == Direction.LEFT) {
                 startAngle = 90;
-            }
-            else if(baseDirection == Direction.UP && adjacentDirection == Direction.RIGHT) {
-                startAngle = 270;
-            } else {
+            } else if (baseDirection == Direction.UP && adjacentDirection == Direction.LEFT) {
                 startAngle = 180;
+            } else { // baseDirection == Direction.UP && adjacentDirection == Direction.RIGHT
+                startAngle = 270;
             }
 
             graphics.strokeArc(arcStartX, arcStartY, 2 * gap, 2 * gap, startAngle, 90, ArcType.OPEN);
@@ -176,37 +196,21 @@ public class MainFrame extends Application {
     }
 
 
-    private boolean isDiagonalFieldPartOfPiece(Field field,Piece piece, Direction baseDirection, Direction adjacentDirection) {
+    private boolean isDiagonalFieldPartOfPiece(Field field, Piece piece, Direction baseDirection, Direction adjacentDirection) {
         return isFieldPartOfPiece(field, piece,
                 baseDirection.rowOffset + adjacentDirection.rowOffset, baseDirection.columnOffset + adjacentDirection.columnOffset);
     }
 
-    private boolean isAdjacentFieldPartOfPiece(Field field, Piece piece,  Direction direction) {
+    private boolean isAdjacentFieldPartOfPiece(Field field, Piece piece, Direction direction) {
         return isFieldPartOfPiece(field, piece, direction.rowOffset, direction.columnOffset);
     }
 
-    private boolean isFieldPartOfPiece(Field field, Piece piece,  int rowOffset, int columnOffset) {
+    private boolean isFieldPartOfPiece(Field field, Piece piece, int rowOffset, int columnOffset) {
         int row = field.getRow() + rowOffset;
         int column = field.getColumn() + columnOffset;
 
         return !isOutOfBounds(row, column) && board.getFieldOnBoard(row, column)
                 .getOccupationPiece() == piece;
-    }
-
-    private int getLeftXOfField(Field field, int gap) {
-        return field.getTopLeftCornerXCoordinate() + gap;
-    }
-
-    private int getRightXOfField(Field field, int gap) {
-        return field.getTopLeftCornerXCoordinate() + FIELD_SIZE - gap;
-    }
-
-    private int getTopYOfField(Field field, int gap) {
-        return field.getTopLeftCornerYCoordinate() + gap;
-    }
-
-    private int getBottomYOfField(Field field, int gap) {
-        return field.getTopLeftCornerYCoordinate() + FIELD_SIZE - gap;
     }
 
     private boolean isOutOfBounds(int row, int column) {

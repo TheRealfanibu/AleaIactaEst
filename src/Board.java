@@ -28,8 +28,8 @@ public class Board {
         Piece piece2 = PieceCollection.ALL_PIECES[4];
         Piece piece3 = PieceCollection.ALL_PIECES[3];
 
-        placePieceOnBoard(piece1, piece1.getOrientations()[3], 1,2);
-        placePieceOnBoard(piece2, piece2.getOrientations()[1], 4,4);
+        placePieceOnBoard(piece1, piece1.getOrientations()[3], 3,1);
+        placePieceOnBoard(piece2, piece2.getOrientations()[1], 4,3);
         placePieceOnBoard(piece3, piece3.getOrientations()[1], 4,0);
     }
 
