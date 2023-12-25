@@ -145,10 +145,6 @@ public class MainFrame extends Application {
         return row < 0 || row > 6 || column < 0 || column > 6;
     }
 
-    private int getRowOffsetByDirection(Direction direction) {
-        return 0;
-    }
-
 
     public static void main(String[] args) {
         launch();
