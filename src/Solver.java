@@ -30,6 +30,9 @@ public class Solver {
                     if (fitsInPlace(board, orientation, rowOffset, columnOffset)) {
                         board.placePieceOnBoard(nextPiece, orientation, rowOffset, columnOffset);
                         solveWithCurrentBoard(board, availablePieces, diceOccurrences);
+                        if (counter > 0) {
+                            return;
+                        }
                         board.removeLastPieceFromBoard();
                     }
                 }
@@ -41,19 +44,11 @@ public class Solver {
     private boolean isValidSolution(Board board, int[] diceOccurrences) {
         List<Integer> fieldNumbers = board.getAllFields()
                 .stream()
-                .filter(field -> !field.isOccupied())
+                .filter(field -> !field.isOccupied() && field.getNumber() != 0)
                 .map(Field::getNumber)
                 .toList();
         int[] solutionNumberOccurrences = countOccurrencesOfNumbers(fieldNumbers);
-        for (int i = 1; i <= 6 ; i++) {
-            if(solutionNumberOccurrences[i] != diceOccurrences[i]) {
-                return false;
-            }
-        }
-        return true;
-
-
-
+        return Arrays.equals(diceOccurrences, solutionNumberOccurrences);
     }
 
     private int[] countOccurrencesOfNumbers(List<Integer> numbers) {
