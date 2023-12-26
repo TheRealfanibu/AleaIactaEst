@@ -71,6 +71,11 @@ public class Board {
         }
     }
 
+    public void reset() {
+        piecesOnBoard.clear();
+        allFields.forEach(field -> field.setOccupationPiece(null));
+    }
+
     public List<Piece> getPiecesOnBoard() {
         return piecesOnBoard;
     }

@@ -2,10 +2,13 @@ import java.util.*;
 
 public class Solver {
 
-    private int counter = 0;
+    private int counter;
 
-    public void solve(Board board, List<Integer> dices) {
-        int[] diceOccurrences = countOccurrencesOfNumbers(dices);
+    public void solve(Board board, List<Integer> diceNumbers) {
+        board.reset();
+        counter = 0;
+
+        int[] diceOccurrences = countOccurrencesOfNumbers(diceNumbers);
         List<Piece> availablePieces = new LinkedList<>(List.of(PieceCollection.ALL_PIECES));
         availablePieces.sort(Comparator.comparingInt(Piece::getAmountOccupations));
 

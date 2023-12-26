@@ -28,6 +28,8 @@ public class MainFrame extends Application {
     private final Dice[] dices = new Dice[6];
     private final Board board = new Board();
 
+    private final Solver solver = new Solver();
+
     @Override
     public void start(Stage stage) {
         initCanvas();
@@ -64,7 +66,10 @@ public class MainFrame extends Application {
     }
 
     private void solve() {
-
+        List<Integer> diceNumbers = Arrays.stream(dices).map(Dice::getNumber).toList();
+        solver.solve(board, diceNumbers);
+        initCanvas();
+        System.out.println("Solution found");
     }
 
     private void initCanvas() {
