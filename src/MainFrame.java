@@ -28,9 +28,11 @@ public class MainFrame extends Application {
     private final Board board = new Board();
 
     @Override
-    public void start(Stage stage) throws Exception {
+    public void start(Stage stage) {
         initCanvas();
 
+        List<Integer> dices = List.of(1,5,2,2,1,4);
+        new Solver().solve(board, dices);
         drawBoard();
 
         BorderPane layout = new BorderPane(canvas);
@@ -46,6 +48,13 @@ public class MainFrame extends Application {
         graphics.setFill(Color.BLACK);
         graphics.setLineWidth(3);
         graphics.strokeRect(0, 0, CANVAS_SIZE, CANVAS_SIZE);
+        graphics.setLineWidth(1);
+        for (int i = 0; i < 7; i++) {
+            graphics.strokeLine(i * FIELD_SIZE, 0, i* FIELD_SIZE, CANVAS_SIZE);
+        }
+        for (int i = 0; i < 7; i++) {
+            graphics.strokeLine(0, i * FIELD_SIZE, CANVAS_SIZE, i * FIELD_SIZE);
+        }
     }
 
     private void drawBoard() {

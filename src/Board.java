@@ -24,16 +24,28 @@ public class Board {
         allFields = new LinkedList<>();
         initField();
 
-        Piece piece1 = PieceCollection.ALL_PIECES[1];
-        Piece piece2 = PieceCollection.ALL_PIECES[4];
-        Piece piece3 = PieceCollection.ALL_PIECES[3];
+        /*Piece thunder = PieceCollection.ALL_PIECES[0];
+        Piece smallL = PieceCollection.ALL_PIECES[1];
+        Piece bigL = PieceCollection.ALL_PIECES[2];
+        Piece w = PieceCollection.ALL_PIECES[3];
+        Piece block = PieceCollection.ALL_PIECES[4];
+        Piece c = PieceCollection.ALL_PIECES[5];
+        Piece chair = PieceCollection.ALL_PIECES[6];
+        Piece stair = PieceCollection.ALL_PIECES[7];
+        Piece straight = PieceCollection.ALL_PIECES[8];
 
-        placePieceOnBoard(piece1, piece1.getOrientations()[3], 3,1);
-        placePieceOnBoard(piece2, piece2.getOrientations()[1], 4,3);
-        placePieceOnBoard(piece3, piece3.getOrientations()[1], 4,0);
+        placePieceOnBoard(thunder, thunder.getOrientations()[1], 2, 0);
+        placePieceOnBoard(smallL, smallL.getOrientations()[1], 5, 4);
+        placePieceOnBoard(bigL, bigL.getOrientations()[1], 0,0);
+        placePieceOnBoard(w, w.getOrientations()[0], 4,0);
+        placePieceOnBoard(block, block.getOrientations()[0], 0,4);
+        placePieceOnBoard(c, c.getOrientations()[3], 2, 5);
+        placePieceOnBoard(chair, chair.getOrientations()[1], 2,2);
+        placePieceOnBoard(stair, stair.getOrientations()[2],5, 2 );
+        placePieceOnBoard(straight, straight.getOrientations()[0], 1,1);*/
     }
 
-    private void placePieceOnBoard(Piece piece, PieceOrientation orientation, int rowOffset, int columnOffset) {
+    public void placePieceOnBoard(Piece piece, PieceOrientation orientation, int rowOffset, int columnOffset) {
         var occupiedFields = Arrays.stream(orientation.getPositions())
                 .map(partialPiecePos -> getFieldOnBoard(partialPiecePos.row() + rowOffset, partialPiecePos.column() + columnOffset))
                 .toList();
@@ -42,6 +54,11 @@ public class Board {
         piece.setOccupiedFields(occupiedFields);
 
         piecesOnBoard.add(piece);
+    }
+
+    public void removeLastPieceFromBoard() {
+        Piece piece = piecesOnBoard.remove(piecesOnBoard.size() - 1);
+        piece.getOccupiedFields().forEach(field -> field.setOccupationPiece(null));
     }
 
     private void initField() {
