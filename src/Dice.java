@@ -9,7 +9,7 @@ public class Dice extends Canvas {
     private static final int FIELD_SIZE = MainFrame.FIELD_SIZE;
     private static final int FIELD_SIZE_HALF = MainFrame.FIELD_SIZE / 2;
 
-    private static final int DICE_CIRCLE_SIZE = 15;
+    private static final int DICE_CIRCLE_SIZE = 12;
 
     private static final int DICE_CIRCLE_SIZE_HALF = DICE_CIRCLE_SIZE / 2;
 

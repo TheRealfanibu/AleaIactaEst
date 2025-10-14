@@ -19,7 +19,7 @@ import java.util.List;
 import java.util.Objects;
 
 public class MainFrame extends Application {
-    public static final int FIELD_SIZE = 100;
+    public static final int FIELD_SIZE = 80;
     public static final int OUTER_PIECE_MARGIN = 10;
     public static final int INNER_PIECE_MARGIN = 17;
 
@@ -32,6 +32,8 @@ public class MainFrame extends Application {
     private final Board board = new Board();
 
     private final Solver solver = new Solver();
+    private int currentPieceDrawX;
+    private int currentPieceDrawY;
 
     @Override
     public void start(Stage stage) {
@@ -94,7 +96,7 @@ public class MainFrame extends Application {
     }
 
     private void drawBoard() {
-        board.getPiecesOnBoard().forEach(this::drawPiece);
+        board.getPiecesOnBoard().forEach(this::createPieceFigure);
         board.getAllFields().stream()
                 .filter(field -> !field.isOccupied())
                 .forEach(this::drawField);
@@ -110,9 +112,9 @@ public class MainFrame extends Application {
         Dice.drawNumber(graphics, field.getNumber(), xOffset, yOffset);
     }
 
-    private void createPieceFigure(Piece piece, boolean outer) {
-
-
+    private void createPieceFigure(Piece piece) {
+        createPieceShape(piece, OUTER_PIECE_MARGIN);
+        graphics.stroke();
     }
 
     private void createPieceShape(Piece piece, int gap) {
@@ -125,51 +127,64 @@ public class MainFrame extends Application {
 
         Field currentField = startPosition.field();
         Direction currentDirection = startPosition.direction();
-        int currentX = getStartX(currentField, currentDirection, gap);
-        int currentY = getStartY(currentField, currentDirection, gap);
+        currentPieceDrawX = getStartX(currentField, currentDirection, gap);
+        currentPieceDrawY = getStartY(currentField, currentDirection, gap);
 
         graphics.beginPath();
-        graphics.moveTo(currentX, currentY);
+        graphics.moveTo(currentPieceDrawX, currentPieceDrawY);
         do {
-            currentX = getEndX(currentField, currentDirection, gap); // big line
-            currentY = getEndY(currentField, currentDirection, gap);
-            graphics.lineTo(currentX, currentY);
+            currentPieceDrawX = getEndX(currentField, currentDirection, gap); // big line
+            currentPieceDrawY = getEndY(currentField, currentDirection, gap);
+            graphics.lineTo(currentPieceDrawX, currentPieceDrawY);
 
-            Direction adjacentDirection = switch (currentDirection) {
-                case UP -> Direction.RIGHT;
-                case RIGHT -> Direction.DOWN;
-                case DOWN -> Direction.LEFT;
-                case LEFT -> Direction.UP;
-            };
+            Direction adjacentDirection = currentDirection.next();
 
             if (isAdjacentFieldPartOfPiece(currentField, piece, adjacentDirection)) {
-                PiecePosition nextPosition = drawAndFindNextPiecePosition(currentX, currentY, currentField, piece,
+                PiecePosition nextPosition = drawAndFindNextPiecePosition(currentField, piece,
                         currentDirection, adjacentDirection, gap);
                 currentField = nextPosition.field();
+                currentDirection = nextPosition.direction();
             } else {
                 currentDirection = adjacentDirection;
             }
         } while (currentField != startPosition.field() || currentDirection != startPosition.direction());
-
+        graphics.closePath();
     }
 
-    private PiecePosition drawAndFindNextPiecePosition(int currentX, int currentY, Field currentField, Piece piece,
+    private PiecePosition drawAndFindNextPiecePosition(Field currentField, Piece piece,
                                                        Direction currentDirection, Direction adjacentDirection, int gap) {
-        currentX = currentX + adjacentDirection.columnOffset * gap;
-        currentY = currentY + adjacentDirection.rowOffset * gap;
-        graphics.lineTo(currentX, currentY); // connection line
+
+        drawLineIntoDirection(adjacentDirection, gap);
 
         if (isDiagonalFieldPartOfPiece(currentField, piece, currentDirection, adjacentDirection)) {
+            int startArcX = currentPieceDrawX;
+            int startArcY = currentPieceDrawY;
+            int diagColumnOffset = currentDirection.columnOffset + adjacentDirection.columnOffset;
+            int diagRowOffset = currentDirection.rowOffset + adjacentDirection.rowOffset;
+            currentPieceDrawX += diagColumnOffset * gap;
+            currentPieceDrawY += diagRowOffset * gap;
 
+            graphics.arcTo(startArcX, startArcY, currentPieceDrawX, currentPieceDrawY, gap);
+
+            drawLineIntoDirection(currentDirection, gap);
+
+            currentField = board.getFieldOnBoard(currentField.getRow() + diagRowOffset,
+                    currentField.getColumn() + diagColumnOffset);
+
+            currentDirection = currentDirection.previous();
         } else {
-            currentX = currentX + adjacentDirection.columnOffset * gap;
-            currentY = currentY + adjacentDirection.rowOffset * gap; // connection line
-            graphics.lineTo(currentX, currentY); // connection line
+            drawLineIntoDirection(adjacentDirection, gap);
 
             currentField = board.getFieldOnBoard(currentField.getRow() + adjacentDirection.rowOffset,
                     currentField.getColumn() + adjacentDirection.columnOffset);
         }
         return new PiecePosition(currentField, currentDirection);
+    }
+
+    private void drawLineIntoDirection(Direction direction, int gap) {
+        currentPieceDrawX += direction.columnOffset * gap;
+        currentPieceDrawY += direction.rowOffset * gap;
+        graphics.lineTo(currentPieceDrawX, currentPieceDrawY); // connection line
     }
 
 
@@ -178,7 +193,7 @@ public class MainFrame extends Application {
         Direction startDirection = null;
         outer: for (Field field : occupiedFields) {
             for (Direction direction : Direction.values()) {
-                if (isAdjacentFieldPartOfPiece(field, piece, direction)) {
+                if (!isAdjacentFieldPartOfPiece(field, piece, direction)) {
                     startField = field;
                     startDirection = direction;
                     break outer;
@@ -246,23 +261,27 @@ public class MainFrame extends Application {
     }
 
     private int getStartX(Field field, Direction direction, int gap) {
-        return direction != Direction.RIGHT ? field.getTopLeftCornerXCoordinate() + gap :
+        return direction == Direction.UP || direction == Direction.LEFT ?
+                field.getTopLeftCornerXCoordinate() + gap :
                 field.getTopLeftCornerXCoordinate() + FIELD_SIZE - gap;
     }
 
     private int getEndX(Field field, Direction direction, int gap) {
-        return direction != Direction.LEFT ? field.getTopLeftCornerXCoordinate() + FIELD_SIZE - gap :
-                field.getTopLeftCornerXCoordinate() + gap;
+        return direction == Direction.DOWN || direction == Direction.LEFT ?
+                field.getTopLeftCornerXCoordinate() + gap :
+                field.getTopLeftCornerXCoordinate() + FIELD_SIZE - gap;
     }
 
     private int getStartY(Field field, Direction direction, int gap) {
-        return direction != Direction.DOWN ? field.getTopLeftCornerYCoordinate() + gap :
+        return direction == Direction.UP || direction == Direction.RIGHT ?
+                field.getTopLeftCornerYCoordinate() + gap :
                 field.getTopLeftCornerYCoordinate() + FIELD_SIZE - gap;
     }
 
     private int getEndY(Field field, Direction direction, int gap) {
-        return direction != Direction.UP ? field.getTopLeftCornerYCoordinate() + FIELD_SIZE - gap :
-                field.getTopLeftCornerYCoordinate() + gap;
+        return direction == Direction.LEFT || direction == Direction.UP ?
+                field.getTopLeftCornerYCoordinate() + gap :
+                field.getTopLeftCornerYCoordinate() + FIELD_SIZE - gap;
     }
 
     private void drawOneSideConnection(Field field, Piece piece, Direction baseDirection, Direction adjacentDirection, int startX, int startY, boolean outer, int gap) {
@@ -287,6 +306,7 @@ public class MainFrame extends Application {
             drawArcConnection(field, piece, baseDirection, adjacentDirection, gap);
         }
     }
+
 
     private void drawArcConnection(Field field, Piece piece, Direction baseDirection, Direction adjacentDirection,
                                    int gap) {
@@ -345,8 +365,8 @@ public class MainFrame extends Application {
 
     private enum Direction {
         LEFT(0, -1),
-        RIGHT(0, 1),
         UP(-1, 0),
+        RIGHT(0, 1),
         DOWN(1, 0);
 
         public final int rowOffset;
@@ -355,6 +375,15 @@ public class MainFrame extends Application {
         Direction(int rowOffset, int columnOffset) {
             this.rowOffset = rowOffset;
             this.columnOffset = columnOffset;
+        }
+
+        public Direction next() {
+            return values()[(ordinal() + 1) % values().length];
+        }
+
+        public Direction previous() {
+            int index = ordinal() == 0 ? values().length - 1 : ordinal() - 1;
+            return values()[index];
         }
     }
 }
