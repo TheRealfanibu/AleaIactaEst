@@ -10,15 +10,18 @@ import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
-import javafx.scene.shape.ArcType;
+import javafx.scene.shape.*;
 import javafx.scene.text.Font;
 import javafx.stage.Stage;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.Objects;
 
 public class MainFrame extends Application {
     public static final int FIELD_SIZE = 100;
+    public static final int OUTER_PIECE_MARGIN = 10;
+    public static final int INNER_PIECE_MARGIN = 17;
 
     private static final int CANVAS_SIZE = 7 * FIELD_SIZE;
 
@@ -36,10 +39,9 @@ public class MainFrame extends Application {
 
         BorderPane layout = new BorderPane();
         layout.setCenter(canvas);
-
         layout.setBottom(createDicePane());
-
         layout.setPadding(new Insets(30));
+
 
         stage.setScene(new Scene(layout));
         stage.show();
@@ -53,7 +55,7 @@ public class MainFrame extends Application {
         HBox hBox = new HBox(30);
         hBox.setAlignment(Pos.CENTER);
         for (int i = 0; i < 6; i++) {
-            dices[i] = new Dice(1);
+            dices[i] = new Dice(i + 1);
             hBox.getChildren().add(dices[i]);
         }
 
@@ -75,16 +77,18 @@ public class MainFrame extends Application {
     private void initCanvas() {
         graphics.setFill(Dice.BACKGROUND_COLOR);
         graphics.fillRect(0, 0, CANVAS_SIZE, CANVAS_SIZE);
-        graphics.setFill(Color.BLACK);
-        graphics.setLineWidth(3);
+        graphics.setStroke(Color.BLACK);
+        graphics.setLineWidth(10);
         graphics.strokeRect(0, 0, CANVAS_SIZE, CANVAS_SIZE);
         graphics.setLineWidth(1);
-        for (int i = 0; i < 7; i++) {
+        for (int i = 1; i < 7; i++) {
             graphics.strokeLine(i * FIELD_SIZE, 0, i* FIELD_SIZE, CANVAS_SIZE);
         }
-        for (int i = 0; i < 7; i++) {
+        for (int i = 1; i < 7; i++) {
             graphics.strokeLine(0, i * FIELD_SIZE, CANVAS_SIZE, i * FIELD_SIZE);
         }
+
+        graphics.beginPath();
 
         drawBoard();
     }
@@ -106,6 +110,89 @@ public class MainFrame extends Application {
         Dice.drawNumber(graphics, field.getNumber(), xOffset, yOffset);
     }
 
+    private void createPieceFigure(Piece piece, boolean outer) {
+
+
+    }
+
+    private void createPieceShape(Piece piece, int gap) {
+        List<Field> occupiedFields = piece.getOccupiedFields();
+        if (occupiedFields.isEmpty()) {
+            throw new IllegalStateException("Piece is not on board and is called for render");
+        }
+
+        PiecePosition startPosition = getStartPiecePosition(piece, occupiedFields);
+
+        Field currentField = startPosition.field();
+        Direction currentDirection = startPosition.direction();
+        int currentX = getStartX(currentField, currentDirection, gap);
+        int currentY = getStartY(currentField, currentDirection, gap);
+
+        graphics.beginPath();
+        graphics.moveTo(currentX, currentY);
+        do {
+            currentX = getEndX(currentField, currentDirection, gap); // big line
+            currentY = getEndY(currentField, currentDirection, gap);
+            graphics.lineTo(currentX, currentY);
+
+            Direction adjacentDirection = switch (currentDirection) {
+                case UP -> Direction.RIGHT;
+                case RIGHT -> Direction.DOWN;
+                case DOWN -> Direction.LEFT;
+                case LEFT -> Direction.UP;
+            };
+
+            if (isAdjacentFieldPartOfPiece(currentField, piece, adjacentDirection)) {
+                PiecePosition nextPosition = drawAndFindNextPiecePosition(currentX, currentY, currentField, piece,
+                        currentDirection, adjacentDirection, gap);
+                currentField = nextPosition.field();
+            } else {
+                currentDirection = adjacentDirection;
+            }
+        } while (currentField != startPosition.field() || currentDirection != startPosition.direction());
+
+    }
+
+    private PiecePosition drawAndFindNextPiecePosition(int currentX, int currentY, Field currentField, Piece piece,
+                                                       Direction currentDirection, Direction adjacentDirection, int gap) {
+        currentX = currentX + adjacentDirection.columnOffset * gap;
+        currentY = currentY + adjacentDirection.rowOffset * gap;
+        graphics.lineTo(currentX, currentY); // connection line
+
+        if (isDiagonalFieldPartOfPiece(currentField, piece, currentDirection, adjacentDirection)) {
+
+        } else {
+            currentX = currentX + adjacentDirection.columnOffset * gap;
+            currentY = currentY + adjacentDirection.rowOffset * gap; // connection line
+            graphics.lineTo(currentX, currentY); // connection line
+
+            currentField = board.getFieldOnBoard(currentField.getRow() + adjacentDirection.rowOffset,
+                    currentField.getColumn() + adjacentDirection.columnOffset);
+        }
+        return new PiecePosition(currentField, currentDirection);
+    }
+
+
+    private PiecePosition getStartPiecePosition(Piece piece, List<Field> occupiedFields) {
+        Field startField = null;
+        Direction startDirection = null;
+        outer: for (Field field : occupiedFields) {
+            for (Direction direction : Direction.values()) {
+                if (isAdjacentFieldPartOfPiece(field, piece, direction)) {
+                    startField = field;
+                    startDirection = direction;
+                    break outer;
+                }
+            }
+        }
+        Objects.requireNonNull(startField);
+        Objects.requireNonNull(startDirection);
+        return new PiecePosition(startField, startDirection);
+    }
+
+    private record PiecePosition(Field field, Direction direction) {
+    }
+
     private void drawPiece(Piece piece) {
         List<Field> occupiedFields = piece.getOccupiedFields();
         if (occupiedFields.isEmpty()) {
@@ -114,24 +201,29 @@ public class MainFrame extends Application {
 
         graphics.setFill(Color.SADDLEBROWN);
         occupiedFields.forEach(field ->
-                graphics.fillRect(field.getTopLeftCornerXCoordinate(), field.getTopLeftCornerYCoordinate(),
-                        FIELD_SIZE, FIELD_SIZE));
-        drawPieceBounds(piece, 10);
-        drawPieceBounds(piece, 17);
+                graphics.fillRect(
+                        field.getTopLeftCornerXCoordinate() + OUTER_PIECE_MARGIN,
+                        field.getTopLeftCornerYCoordinate()  + OUTER_PIECE_MARGIN,
+                        FIELD_SIZE - 2 * OUTER_PIECE_MARGIN, FIELD_SIZE - 2 * OUTER_PIECE_MARGIN));
+
+        drawPieceBounds(piece, true);
+        drawPieceBounds(piece, false);
     }
 
-    private void drawPieceBounds(Piece piece, int gap) {
+    private void drawPieceBounds(Piece piece, boolean outer) {
         graphics.setStroke(Color.BLACK);
         graphics.setLineWidth(2);
         for (Field field : piece.getOccupiedFields()) {
             for (Direction direction : Direction.values()) {
-                drawSideConnection(field, piece, direction, gap);
+                drawSideConnection(field, piece, direction, outer);
             }
         }
     }
 
-    private void drawSideConnection(Field field, Piece piece, Direction baseDirection, int gap) {
+    private void drawSideConnection(Field field, Piece piece, Direction baseDirection, boolean outer) {
         if (!isAdjacentFieldPartOfPiece(field, piece, baseDirection)) {
+            int gap = outer ? OUTER_PIECE_MARGIN : INNER_PIECE_MARGIN;
+
             int gapLineStartX = getStartX(field, baseDirection, gap);
             int gapLineStartY = getStartY(field, baseDirection, gap);
             int gapLineEndX = getEndX(field, baseDirection, gap);
@@ -139,17 +231,17 @@ public class MainFrame extends Application {
 
             graphics.strokeLine(gapLineStartX, gapLineStartY, gapLineEndX, gapLineEndY);
 
-            /*graphics.setLineWidth(1);
-            graphics.strokeLine(getStartX(field, baseDirection, 0), getStartY(field, baseDirection, 0),
-                    getEndX(field, baseDirection, 0), getEndY(field, baseDirection, 0));
-            graphics.setLineWidth(2);*/
+//            graphics.setLineWidth(1);
+//            graphics.strokeLine(getStartX(field, baseDirection, 0), getStartY(field, baseDirection, 0),
+//                    getEndX(field, baseDirection, 0), getEndY(field, baseDirection, 0));
+//            graphics.setLineWidth(2);
 
             Direction firstAdjacentDirection = baseDirection == Direction.DOWN || baseDirection == Direction.UP
                     ? Direction.LEFT : Direction.UP;
             Direction secondAdjacentDirection = baseDirection == Direction.DOWN || baseDirection == Direction.UP
                     ? Direction.RIGHT : Direction.DOWN;
-            drawOneSideConnection(field, piece, baseDirection, firstAdjacentDirection, gapLineStartX, gapLineStartY, gap);
-            drawOneSideConnection(field, piece, baseDirection, secondAdjacentDirection, gapLineEndX, gapLineEndY, gap);
+            drawOneSideConnection(field, piece, baseDirection, firstAdjacentDirection, gapLineStartX, gapLineStartY, outer, gap);
+            drawOneSideConnection(field, piece, baseDirection, secondAdjacentDirection, gapLineEndX, gapLineEndY, outer, gap);
         }
     }
 
@@ -173,9 +265,25 @@ public class MainFrame extends Application {
                 field.getTopLeftCornerYCoordinate() + gap;
     }
 
-    private void drawOneSideConnection(Field field, Piece piece, Direction baseDirection, Direction adjacentDirection, int startX, int startY, int gap) {
+    private void drawOneSideConnection(Field field, Piece piece, Direction baseDirection, Direction adjacentDirection, int startX, int startY, boolean outer, int gap) {
         if (isAdjacentFieldPartOfPiece(field, piece, adjacentDirection)) {
-            graphics.strokeLine(startX, startY, startX + adjacentDirection.columnOffset * gap, startY + adjacentDirection.rowOffset * gap);
+            int endX = startX + adjacentDirection.columnOffset * gap;
+            int endY = startY + adjacentDirection.rowOffset * gap;
+            graphics.strokeLine(startX, startY, endX, endY);
+
+            if (outer) {
+                int rectX = Math.min(startX, endX);
+                int rectY = Math.min(startY, endY);
+                int width = startX == endX ? FIELD_SIZE - 2 * OUTER_PIECE_MARGIN : OUTER_PIECE_MARGIN;
+                int height = startY == endY ? FIELD_SIZE - 2 * OUTER_PIECE_MARGIN : OUTER_PIECE_MARGIN;
+                if (baseDirection == Direction.DOWN) {
+                    rectY -= height;
+                } else if (baseDirection == Direction.RIGHT) {
+                    rectX -= width;
+                }
+                graphics.fillRect(rectX, rectY, width, height);
+            }
+
             drawArcConnection(field, piece, baseDirection, adjacentDirection, gap);
         }
     }

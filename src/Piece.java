@@ -24,6 +24,7 @@ public class Piece {
         return occupiedFields;
     }
 
+
     public void setOccupiedFields(List<Field> occupiedFields) {
         this.occupiedFields = occupiedFields;
     }
