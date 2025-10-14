@@ -20,8 +20,8 @@ import java.util.Objects;
 
 public class MainFrame extends Application {
     public static final int FIELD_SIZE = 80;
-    public static final int OUTER_PIECE_MARGIN = 10;
-    public static final int INNER_PIECE_MARGIN = 17;
+    public static final int OUTER_PIECE_MARGIN = 7;
+    public static final int INNER_PIECE_MARGIN = 14;
 
     private static final int CANVAS_SIZE = 7 * FIELD_SIZE;
 
@@ -113,7 +113,16 @@ public class MainFrame extends Application {
     }
 
     private void createPieceFigure(Piece piece) {
+
+        graphics.setFill(Color.SADDLEBROWN);
+
+        graphics.setLineWidth(3);
         createPieceShape(piece, OUTER_PIECE_MARGIN);
+        graphics.fill();
+        graphics.stroke();
+
+        graphics.setLineWidth(2);
+        createPieceShape(piece, INNER_PIECE_MARGIN);
         graphics.stroke();
     }
 
@@ -157,14 +166,14 @@ public class MainFrame extends Application {
         drawLineIntoDirection(adjacentDirection, gap);
 
         if (isDiagonalFieldPartOfPiece(currentField, piece, currentDirection, adjacentDirection)) {
-            int startArcX = currentPieceDrawX;
-            int startArcY = currentPieceDrawY;
+            int arcX = currentPieceDrawX + adjacentDirection.columnOffset * gap;
+            int arcY = currentPieceDrawY + adjacentDirection.rowOffset * gap;
             int diagColumnOffset = currentDirection.columnOffset + adjacentDirection.columnOffset;
             int diagRowOffset = currentDirection.rowOffset + adjacentDirection.rowOffset;
             currentPieceDrawX += diagColumnOffset * gap;
             currentPieceDrawY += diagRowOffset * gap;
 
-            graphics.arcTo(startArcX, startArcY, currentPieceDrawX, currentPieceDrawY, gap);
+            graphics.arcTo(arcX, arcY, currentPieceDrawX, currentPieceDrawY, gap);
 
             drawLineIntoDirection(currentDirection, gap);
 
