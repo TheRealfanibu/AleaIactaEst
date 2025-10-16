@@ -35,35 +35,43 @@ public class MainFrame extends Application {
 
     private boolean solvedState = false;
     private int currentSolutionNumber;
-    private int solutionsAvailable;
+    private int solutionsFound;
 
-    private Thread solutionThread;
 
     private void updateSolution() {
-        board = solver.getSolutions().get(currentSolutionNumber);
+        board = solver.getSolutions().get(currentSolutionNumber - 1);
         drawBoard();
         updateSolutionObjects();
     }
 
-    public void updateSolutionStats(int solutionsAvailable) {
-        if (!solvedState) {
-            solvedState = true;
-            if (solutionsAvailable > 0) {
-                currentSolutionNumber = 1;
-                board = solver.getSolutions().get(0);
-                Platform.runLater(this::drawBoard);
+    public void updateSolutionStats(int solutionsFound) {
+        this.solutionsFound = solutionsFound;
+
+        Platform.runLater(() -> {
+            synchronized (this) {
+                if (solver.isSolving()) {
+                    if (!solvedState) {
+                        solvedState = true;
+                        if (solutionsFound > 0) {
+                            currentSolutionNumber = 1;
+                            board = solver.getSolutions().get(0);
+                            drawBoard();
+                        }
+                    }
+
+                    Platform.runLater(this::updateSolutionObjects);
+                }
             }
-        }
-        this.solutionsAvailable = solutionsAvailable;
-        Platform.runLater(this::updateSolutionObjects);
+        });
+
     }
 
 
-    private void updateSolutionObjects() {
+    private synchronized void updateSolutionObjects() {
         previusSolutionButton.setDisable(currentSolutionNumber <= 1);
-        nextSolutionButton.setDisable(currentSolutionNumber >= solutionsAvailable);
+        nextSolutionButton.setDisable(currentSolutionNumber >= solutionsFound);
 
-        String solutionNumbers = solvedState ? currentSolutionNumber + "/" + solutionsAvailable : "-/-";
+        String solutionNumbers = solvedState ? currentSolutionNumber + "/" + solutionsFound : "-/-";
         solutionLabel.setText("Solution: " + solutionNumbers);
     }
 
@@ -78,14 +86,13 @@ public class MainFrame extends Application {
         resetSolutionObjects();
 
         List<Integer> diceNumbers = Arrays.stream(dices).map(Dice::getNumber).toList();
-        solutionThread = new Thread(() -> solver.solve(board.copy(), diceNumbers));
-        solutionThread.start();
+        new Thread(() -> solver.solve(board.copy(), diceNumbers)).start();
     }
 
     private void resetSolutionObjects() {
         solver.stop();
         solvedState = false;
-        solutionsAvailable = 0;
+        solutionsFound = 0;
         currentSolutionNumber = 0;
     }
 
@@ -231,6 +238,7 @@ public class MainFrame extends Application {
         solutionButton.setDisable(true);
         return solutionButton;
     }
+
 
     public static void main(String[] args) {
         launch();

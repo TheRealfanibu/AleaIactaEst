@@ -2,9 +2,9 @@ import java.util.*;
 
 public class Solver {
 
-    private List<Board> solutions = new ArrayList<>();
+    private final List<Board> solutions = new ArrayList<>();
 
-    private MainFrame mainFrame;
+    private final MainFrame mainFrame;
 
     private boolean solving = false;
 
@@ -22,6 +22,7 @@ public class Solver {
         availablePieces.sort(Comparator.comparingInt(Piece::getAmountOccupations));
 
         solveWithCurrentBoard(board, availablePieces, diceOccurrences);
+        mainFrame.updateSolutionStats(solutions.size());
     }
 
     public void solveWithCurrentBoard(Board board, List<Piece> availablePieces, int[] diceOccurrences) {
@@ -82,6 +83,10 @@ public class Solver {
             }
         }
         return true;
+    }
+
+    public boolean isSolving() {
+        return solving;
     }
 
     public List<Board> getSolutions() {
