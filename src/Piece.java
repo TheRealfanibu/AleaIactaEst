@@ -31,8 +31,10 @@ public class Piece {
         graphics.stroke();
 
         graphics.setLineWidth(innerStroke);
-        createPieceShape(graphics, fieldSize, innerMargin);
-        graphics.stroke();
+        for (int i = 0; i < 2; i++) {
+            createPieceShape(graphics, fieldSize, outerMargin + (i + 1) * innerMargin);
+            graphics.stroke();
+        }
     }
 
     private void createPieceShape(GraphicsContext graphics, int fieldSize, int margin) {

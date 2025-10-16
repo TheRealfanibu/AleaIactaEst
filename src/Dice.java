@@ -1,8 +1,9 @@
 import javafx.scene.canvas.Canvas;
 import javafx.scene.canvas.GraphicsContext;
-import javafx.scene.input.MouseButton;
-import javafx.scene.input.MouseEvent;
+import javafx.scene.input.*;
 import javafx.scene.paint.Color;
+
+import javax.xml.crypto.Data;
 
 public class Dice extends Canvas {
 
@@ -28,6 +29,41 @@ public class Dice extends Canvas {
 
         draw();
         setOnMouseClicked(this::onMouseClicked);
+        setOnDragDetected(e -> {
+            /* drag was detected, start a drag-and-drop gesture*/
+            /* allow any transfer mode */
+            Dragboard db = startDragAndDrop(TransferMode.COPY);
+
+            /* Put a string on a dragboard */
+            ClipboardContent content = new ClipboardContent();
+            content.putString(Integer.toString(number));
+            db.setContent(content);
+
+            e.consume();
+        });
+
+        setOnDragOver(e -> {
+            if(e.getGestureSource() != this && System.currentTimeMillis() % 1000 == 0) {
+                System.out.println("1s over");
+                e.acceptTransferModes(TransferMode.COPY);
+            }
+        });
+
+        setOnDragEntered(e -> {
+            System.out.println("entered");
+        });
+
+        setOnDragDropped(e -> {
+            System.out.println("dropped");
+
+            e.setDropCompleted(true);
+
+            e.consume();
+        });
+
+        setOnDragDone(e -> {
+            System.out.println("transferred:" + e.getTransferMode());
+        });
     }
 
     private void onMouseClicked(MouseEvent mouseEvent) {

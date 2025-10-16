@@ -37,8 +37,23 @@ public class MainFrame extends Application {
 
 
         BorderPane layout = new BorderPane();
-        layout.setCenter(canvas);
-        layout.setBottom(createDicePane());
+
+        HBox centerBox = new HBox(30);
+        centerBox.setAlignment(Pos.TOP_CENTER);
+
+        VBox middleBox = new VBox(20);
+        middleBox.setAlignment(Pos.CENTER);
+
+        Button button = new Button("Solve");
+        button.setFont(Font.font(25));
+        button.onActionProperty().set(e -> solve());
+
+        middleBox.getChildren().addAll(canvas, button);
+
+        centerBox.getChildren().addAll(createDicePane(), middleBox);
+        layout.setCenter(centerBox);
+
+
         layout.setPadding(new Insets(30));
 
 
@@ -47,22 +62,13 @@ public class MainFrame extends Application {
     }
 
     private Pane createDicePane() {
-        VBox vBox = new VBox(40);
+        VBox vBox = new VBox(30);
         vBox.setAlignment(Pos.CENTER);
-        vBox.setPadding(new Insets(30, 0, 30, 0));
-
-        HBox hBox = new HBox(30);
-        hBox.setAlignment(Pos.CENTER);
         for (int i = 0; i < 6; i++) {
             dices[i] = new Dice(i + 1);
-            hBox.getChildren().add(dices[i]);
+            vBox.getChildren().add(dices[i]);
         }
 
-        Button button = new Button("Solve");
-        button.setFont(Font.font(30));
-        button.onActionProperty().set(e -> solve());
-
-        vBox.getChildren().addAll(hBox, button);
         return vBox;
     }
 
@@ -87,15 +93,13 @@ public class MainFrame extends Application {
             graphics.strokeLine(0, i * FIELD_SIZE, CANVAS_SIZE, i * FIELD_SIZE);
         }
 
-        graphics.beginPath();
-
         drawBoard();
     }
 
     private void drawBoard() {
         board.getPiecesOnBoard().forEach(piece -> piece.setBoard(board));
         board.getPiecesOnBoard().forEach(piece -> piece.drawPiece(graphics,
-                3, 2, FIELD_SIZE, 7, 14));
+                3, 2, FIELD_SIZE, 8, 6));
         board.getAllFields().stream()
                 .filter(field -> !field.isOccupied())
                 .forEach(this::drawField);
