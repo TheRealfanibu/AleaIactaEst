@@ -24,6 +24,8 @@ public class Board {
         allFields = new LinkedList<>();
         initField();
 
+        Arrays.stream(PieceCollection.ALL_PIECES).forEach(piece -> piece.setBoard(this));
+
         /*Piece thunder = PieceCollection.ALL_PIECES[0];
         Piece smallL = PieceCollection.ALL_PIECES[1];
         Piece bigL = PieceCollection.ALL_PIECES[2];
@@ -56,10 +58,21 @@ public class Board {
         piecesOnBoard.add(piece);
     }
 
+    public void removePieceFromBoard(Piece piece) {
+        piecesOnBoard.remove(piece);
+        removePieceFieldInfo(piece);
+    }
+
     public void removeLastPieceFromBoard() {
         Piece piece = piecesOnBoard.remove(piecesOnBoard.size() - 1);
-        piece.getOccupiedFields().forEach(field -> field.setOccupationPiece(null));
+        removePieceFieldInfo(piece);
     }
+
+    private void removePieceFieldInfo(Piece piece) {
+        piece.getOccupiedFields().forEach(field -> field.setOccupationPiece(null));
+        piece.setOccupiedFields(null);
+    }
+
 
     private void initField() {
         for (int i = 0; i < 7; i++) {

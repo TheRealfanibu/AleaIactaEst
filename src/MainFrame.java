@@ -5,6 +5,8 @@ import javafx.scene.Scene;
 import javafx.scene.canvas.Canvas;
 import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.control.Button;
+import javafx.scene.input.MouseButton;
+import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
@@ -15,7 +17,6 @@ import javafx.stage.Stage;
 
 import java.util.Arrays;
 import java.util.List;
-import java.util.Objects;
 
 public class MainFrame extends Application {
     public static final int FIELD_SIZE = 80;
@@ -34,7 +35,6 @@ public class MainFrame extends Application {
     @Override
     public void start(Stage stage) {
         initCanvas();
-
 
         BorderPane layout = new BorderPane();
 
@@ -80,6 +80,11 @@ public class MainFrame extends Application {
     }
 
     private void initCanvas() {
+        drawCanvas();
+        canvas.setOnMouseClicked(this::canvasOnClicked);
+    }
+
+    private void drawCanvas() {
         graphics.setFill(Dice.BACKGROUND_COLOR);
         graphics.fillRect(0, 0, CANVAS_SIZE, CANVAS_SIZE);
         graphics.setStroke(Color.BLACK);
@@ -96,8 +101,25 @@ public class MainFrame extends Application {
         drawBoard();
     }
 
+    private void canvasOnClicked(MouseEvent mouseEvent) {
+        if (mouseEvent.getButton() == MouseButton.SECONDARY) {
+            removePiece(mouseEvent.getX(), mouseEvent.getY());
+            drawCanvas();
+        }
+    }
+
+    private void removePiece(double mouseX, double mouseY) {
+        int row = (int) (mouseY / FIELD_SIZE);
+        int column = (int) (mouseX / FIELD_SIZE);
+
+        Field clickedField = board.getFieldOnBoard(row, column);
+        if (clickedField.isOccupied()) {
+            board.removePieceFromBoard(clickedField.getOccupationPiece());
+            drawBoard();
+        }
+    }
+
     private void drawBoard() {
-        board.getPiecesOnBoard().forEach(piece -> piece.setBoard(board));
         board.getPiecesOnBoard().forEach(piece -> piece.drawPiece(graphics,
                 3, 2, FIELD_SIZE, 8, 6));
         board.getAllFields().stream()
