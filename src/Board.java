@@ -1,3 +1,4 @@
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
@@ -17,6 +18,7 @@ public class Board {
     private final Field[][] boardFields;
     private final List<Field> allFields;
 
+    private final List<Piece> allPieces = PieceCollection.createPieceInstances();
     private final List<Piece> piecesOnBoard = new LinkedList<>();
 
     public Board() {
@@ -24,7 +26,7 @@ public class Board {
         allFields = new LinkedList<>();
         initField();
 
-        Arrays.stream(PieceCollection.ALL_PIECES).forEach(piece -> piece.setBoard(this));
+        allPieces.forEach(piece -> piece.setBoard(this));
 
         /*Piece thunder = PieceCollection.ALL_PIECES[0];
         Piece smallL = PieceCollection.ALL_PIECES[1];
@@ -53,6 +55,9 @@ public class Board {
                 .toList();
 
         occupiedFields.forEach(field -> field.setOccupationPiece(piece));
+        piece.setRowOffsetOnBoard(rowOffset);
+        piece.setColumnOffsetOnBoard(columnOffset);
+        piece.setOrientationOnBoard(orientation);
         piece.setOccupiedFields(occupiedFields);
 
         piecesOnBoard.add(piece);
@@ -93,11 +98,27 @@ public class Board {
         return piecesOnBoard;
     }
 
+    public List<Piece> getAvailablePieces() {
+        List<Piece> availablePieces = new ArrayList<>(allPieces);
+        availablePieces.removeAll(piecesOnBoard);
+        return availablePieces;
+    }
+
     public Field getFieldOnBoard(int row, int column) {
         return boardFields[row][column];
     }
 
     public List<Field> getAllFields() {
         return allFields;
+    }
+
+    public Board copy() {
+        Board copyBoard = new Board();
+        for (Piece piece : piecesOnBoard) {
+            Piece copyPiece = copyBoard.allPieces.get(piece.getId());
+            copyBoard.placePieceOnBoard(copyPiece, piece.getOrientationOnBoard(),
+                    piece.getRowOffsetOnBoard(), piece.getColumnOffsetOnBoard());
+        }
+        return copyBoard;
     }
 }

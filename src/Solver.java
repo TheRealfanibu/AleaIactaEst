@@ -2,28 +2,34 @@ import java.util.*;
 
 public class Solver {
 
-    private int counter;
+    private List<Board> solutions = new ArrayList<>();
+
+    private MainFrame mainFrame;
+
+    private boolean solving = false;
+
+
+    public Solver(MainFrame mainFrame) {
+        this.mainFrame = mainFrame;
+    }
 
     public void solve(Board board, List<Integer> diceNumbers) {
-        counter = 0;
+        solving = true;
+        solutions.clear();
 
         int[] diceOccurrences = countOccurrencesOfNumbers(diceNumbers);
-        List<Piece> availablePieces = new LinkedList<>(List.of(PieceCollection.ALL_PIECES));
-        availablePieces.removeAll(board.getPiecesOnBoard());
+        List<Piece> availablePieces = board.getAvailablePieces();
         availablePieces.sort(Comparator.comparingInt(Piece::getAmountOccupations));
 
         solveWithCurrentBoard(board, availablePieces, diceOccurrences);
-        if(counter > 0) {
-            System.out.println("Solution found :)");
-        } else {
-            System.out.println("No solution found :(");
-        }
     }
 
     public void solveWithCurrentBoard(Board board, List<Piece> availablePieces, int[] diceOccurrences) {
+
         if(availablePieces.isEmpty()) {
             if (isValidSolution(board, diceOccurrences)) {
-                counter++;
+                solutions.add(board.copy());
+                mainFrame.updateSolutionStats(solutions.size());
             }
             return;
         }
@@ -32,18 +38,23 @@ public class Solver {
         for(PieceOrientation orientation : nextPiece.getOrientations()) {
             for (int rowOffset = 0; rowOffset < 7 - orientation.getHeight(); rowOffset++) {
                 for (int columnOffset = 0; columnOffset < 7 - orientation.getWidth(); columnOffset++) {
+                    if (!solving) {
+                        return;
+                    }
+
                     if (fitsInPlace(board, orientation, rowOffset, columnOffset)) {
-                        board.placePieceOnBoard(nextPiece, orientation, rowOffset, columnOffset);
-                        solveWithCurrentBoard(board, availablePieces, diceOccurrences);
-                        if (counter > 0) {
-                            return;
-                        }
-                        board.removeLastPieceFromBoard();
+                            board.placePieceOnBoard(nextPiece, orientation, rowOffset, columnOffset);
+                            solveWithCurrentBoard(board, availablePieces, diceOccurrences);
+                            board.removeLastPieceFromBoard();
                     }
                 }
             }
         }
         availablePieces.add(0, nextPiece);
+    }
+
+    public void stop() {
+        solving = false;
     }
 
     private boolean isValidSolution(Board board, int[] diceOccurrences) {
@@ -73,5 +84,7 @@ public class Solver {
         return true;
     }
 
-
+    public List<Board> getSolutions() {
+        return solutions;
+    }
 }

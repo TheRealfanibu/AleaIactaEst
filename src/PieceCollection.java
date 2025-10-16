@@ -1,9 +1,12 @@
 import java.util.Arrays;
+import java.util.List;
 import java.util.stream.IntStream;
 
 public class PieceCollection {
 
-    public static final Piece[] ALL_PIECES = {
+    private static int pieceCounter = 0;
+
+    private static final List<Piece> ALL_PIECES = List.of(
             // Thunder-Piece
             createPiece(
                     new int[]{0, 1, 1, 1, 2},
@@ -48,7 +51,13 @@ public class PieceCollection {
                     new int[]{0,0,0},
                     new int[]{0,1,2}, true
             )
-    };
+    );
+
+    public static List<Piece> createPieceInstances() {
+        return ALL_PIECES.stream()
+                .map(piece -> new Piece(piece.getAmountOccupations(), piece.getOrientations(), piece.getId()))
+                .toList();
+    }
 
     private static Piece createPiece(int[] rows, int[] columns, boolean symmetric) {
         FieldPosition[] fieldPositions = IntStream.range(0, rows.length)
@@ -81,6 +90,6 @@ public class PieceCollection {
             orientations[i] = new PieceOrientation(shiftedRotatedPositions);
             fieldPositions = shiftedRotatedPositions;
         }
-        return new Piece(fieldPositions.length, orientations);
+        return new Piece(fieldPositions.length, orientations, pieceCounter++);
     }
 }

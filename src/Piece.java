@@ -8,7 +8,11 @@ public class Piece {
 
     private final int amountOccupations;
     private final PieceOrientation[] orientations;
+    private final int id;
 
+    private int rowOffsetOnBoard;
+    private int columnOffsetOnBoard;
+    private PieceOrientation orientationOnBoard;
     private List<Field> occupiedFields;
 
     private int currentDrawX;
@@ -16,9 +20,10 @@ public class Piece {
 
     private Board board;
 
-    public Piece(int amountOccupations, PieceOrientation[] orientations) {
+    public Piece(int amountOccupations, PieceOrientation[] orientations, int id) {
         this.amountOccupations = amountOccupations;
         this.orientations = orientations;
+        this.id = id;
     }
 
     public void drawPiece(GraphicsContext graphics, int outerStroke, int innerStroke,
@@ -167,7 +172,6 @@ public class Piece {
         return row < 0 || row > 6 || column < 0 || column > 6;
     }
 
-
     public void setBoard(Board board) {
         this.board = board;
     }
@@ -188,6 +192,33 @@ public class Piece {
         this.occupiedFields = occupiedFields;
     }
 
+    public int getId() {
+        return id;
+    }
+
+    public PieceOrientation getOrientationOnBoard() {
+        return orientationOnBoard;
+    }
+
+    public void setOrientationOnBoard(PieceOrientation orientationOnBoard) {
+        this.orientationOnBoard = orientationOnBoard;
+    }
+
+    public int getRowOffsetOnBoard() {
+        return rowOffsetOnBoard;
+    }
+
+    public void setRowOffsetOnBoard(int rowOffsetOnBoard) {
+        this.rowOffsetOnBoard = rowOffsetOnBoard;
+    }
+
+    public int getColumnOffsetOnBoard() {
+        return columnOffsetOnBoard;
+    }
+
+    public void setColumnOffsetOnBoard(int columnOffsetOnBoard) {
+        this.columnOffsetOnBoard = columnOffsetOnBoard;
+    }
 
     private enum Direction {
         LEFT(0, -1),
