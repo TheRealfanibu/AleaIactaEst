@@ -5,23 +5,25 @@ public class Solver {
     private int counter;
 
     public void solve(Board board, List<Integer> diceNumbers) {
-        board.reset();
         counter = 0;
 
         int[] diceOccurrences = countOccurrencesOfNumbers(diceNumbers);
         List<Piece> availablePieces = new LinkedList<>(List.of(PieceCollection.ALL_PIECES));
+        availablePieces.removeAll(board.getPiecesOnBoard());
         availablePieces.sort(Comparator.comparingInt(Piece::getAmountOccupations));
 
         solveWithCurrentBoard(board, availablePieces, diceOccurrences);
+        if(counter > 0) {
+            System.out.println("Solution found :)");
+        } else {
+            System.out.println("No solution found :(");
+        }
     }
 
     public void solveWithCurrentBoard(Board board, List<Piece> availablePieces, int[] diceOccurrences) {
         if(availablePieces.isEmpty()) {
             if (isValidSolution(board, diceOccurrences)) {
                 counter++;
-                if(counter % 100 == 0) {
-                    System.out.println(counter);
-                }
             }
             return;
         }

@@ -44,11 +44,21 @@ public class MainFrame extends Application {
         VBox middleBox = new VBox(20);
         middleBox.setAlignment(Pos.CENTER);
 
-        Button button = new Button("Solve");
-        button.setFont(Font.font(25));
-        button.onActionProperty().set(e -> solve());
+        Font buttonFont = Font.font(20);
 
-        middleBox.getChildren().addAll(canvas, button);
+        Button solveButton = new Button("Solve");
+        solveButton.setFont(buttonFont);
+        solveButton.onActionProperty().set(e -> solveBoard());
+
+        Button resetButton = new Button("Reset");
+        resetButton.setFont(buttonFont);
+        resetButton.onActionProperty().set(e -> resetBoard());
+
+        HBox buttonBox = new HBox(10);
+        buttonBox.setAlignment(Pos.CENTER);
+        buttonBox.getChildren().addAll(solveButton, resetButton);
+
+        middleBox.getChildren().addAll(canvas, buttonBox);
 
         centerBox.getChildren().addAll(createDicePane(), middleBox);
         layout.setCenter(centerBox);
@@ -59,6 +69,11 @@ public class MainFrame extends Application {
 
         stage.setScene(new Scene(layout));
         stage.show();
+    }
+
+    private void resetBoard() {
+        board.reset();
+        drawCanvas();
     }
 
     private Pane createDicePane() {
@@ -72,11 +87,10 @@ public class MainFrame extends Application {
         return vBox;
     }
 
-    private void solve() {
+    private void solveBoard() {
         List<Integer> diceNumbers = Arrays.stream(dices).map(Dice::getNumber).toList();
         solver.solve(board, diceNumbers);
-        initCanvas();
-        System.out.println("Solution found");
+        drawCanvas();
     }
 
     private void initCanvas() {

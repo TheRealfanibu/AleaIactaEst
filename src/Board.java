@@ -85,8 +85,8 @@ public class Board {
     }
 
     public void reset() {
+        piecesOnBoard.forEach(this::removePieceFieldInfo);
         piecesOnBoard.clear();
-        allFields.forEach(field -> field.setOccupationPiece(null));
     }
 
     public List<Piece> getPiecesOnBoard() {
