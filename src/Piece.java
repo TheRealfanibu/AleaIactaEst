@@ -26,9 +26,10 @@ public class Piece {
         this.id = id;
     }
 
-    public void drawPiece(GraphicsContext graphics, int outerStroke, int innerStroke,
+    public void drawPiece(GraphicsContext graphics, List<Piece> fixedPiecesOnBoard, int outerStroke, int innerStroke,
                           int fieldSize, int outerMargin, int innerMargin) {
-        graphics.setFill(Color.SADDLEBROWN);
+        Color fillColor = fixedPiecesOnBoard.contains(this) ? Color.SANDYBROWN : Color.SADDLEBROWN;
+        graphics.setFill(fillColor);
 
         graphics.setLineWidth(outerStroke);
         createPieceShape(graphics, fieldSize, outerMargin);
@@ -242,5 +243,18 @@ public class Piece {
             int index = ordinal() == 0 ? values().length - 1 : ordinal() - 1;
             return values()[index];
         }
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (obj instanceof Piece) {
+            return ((Piece) obj).id == id;
+        }
+        return false;
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(id);
     }
 }

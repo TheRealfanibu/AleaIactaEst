@@ -22,9 +22,11 @@ public class Dice extends Canvas {
 
     private long lastEvent;
 
+    private MainFrame mainFrame;
 
-    public Dice(int number) {
+    public Dice(MainFrame mainFrame, int number) {
         super(MainFrame.FIELD_SIZE, MainFrame.FIELD_SIZE);
+        this.mainFrame = mainFrame;
         this.number = number;
 
         draw();
@@ -47,6 +49,7 @@ public class Dice extends Canvas {
             }
         }
         draw();
+        mainFrame.resetSolutionObjects();
     }
 
     private void draw() {

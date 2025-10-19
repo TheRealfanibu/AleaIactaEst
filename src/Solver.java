@@ -22,7 +22,7 @@ public class Solver {
         availablePieces.sort(Comparator.comparingInt(Piece::getAmountOccupations));
 
         solveWithCurrentBoard(board, availablePieces, diceOccurrences);
-        mainFrame.updateSolutionStats(solutions.size());
+        mainFrame.indicateSolvingFinished();
     }
 
     public void solveWithCurrentBoard(Board board, List<Piece> availablePieces, int[] diceOccurrences) {
@@ -30,7 +30,7 @@ public class Solver {
         if(availablePieces.isEmpty()) {
             if (isValidSolution(board, diceOccurrences)) {
                 solutions.add(board.copy());
-                mainFrame.updateSolutionStats(solutions.size());
+                mainFrame.updateSolutionStats();
             }
             return;
         }

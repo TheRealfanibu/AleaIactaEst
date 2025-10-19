@@ -30,12 +30,15 @@ public class MainFrame extends Application {
 
     private final Solver solver = new Solver(this);
 
+    private Button solveButton;
     private Button previusSolutionButton, nextSolutionButton;
     private Label solutionLabel;
 
-    private boolean solvedState = false;
+    private List<Piece> fixedPiecesOnBoard;
+
+    private boolean anySolutionFound = false;
     private int currentSolutionNumber;
-    private int solutionsFound;
+    private int numberSolutionsFound;
 
 
     private void updateSolution() {
@@ -44,17 +47,26 @@ public class MainFrame extends Application {
         updateSolutionObjects();
     }
 
-    public void updateSolutionStats(int solutionsFound) {
-        this.solutionsFound = solutionsFound;
+    public void indicateSolvingFinished() {
+        if (solver.isSolving()) {
+            updateSolutionStats();
+            String solveButtonText = numberSolutionsFound == 0 ? "No solution found." : "Solved.";
+            Platform.runLater(() -> solveButton.setText(solveButtonText));
+        }
+
+    }
+
+    public void updateSolutionStats() {
+        this.numberSolutionsFound = solver.getSolutions().size();
 
         Platform.runLater(() -> {
             synchronized (this) {
                 if (solver.isSolving()) {
-                    if (!solvedState) {
-                        solvedState = true;
-                        if (solutionsFound > 0) {
+                    if (!anySolutionFound) {
+                        anySolutionFound = true;
+                        if (numberSolutionsFound > 0) {
                             currentSolutionNumber = 1;
-                            board = solver.getSolutions().get(0);
+                            board = solver.getSolutions().get(0); // todo: can raise exception with next run
                             drawBoard();
                         }
                     }
@@ -69,9 +81,9 @@ public class MainFrame extends Application {
 
     private synchronized void updateSolutionObjects() {
         previusSolutionButton.setDisable(currentSolutionNumber <= 1);
-        nextSolutionButton.setDisable(currentSolutionNumber >= solutionsFound);
+        nextSolutionButton.setDisable(currentSolutionNumber >= numberSolutionsFound);
 
-        String solutionNumbers = solvedState ? currentSolutionNumber + "/" + solutionsFound : "-/-";
+        String solutionNumbers = anySolutionFound ? currentSolutionNumber + "/" + numberSolutionsFound : "-/-";
         solutionLabel.setText("Solution: " + solutionNumbers);
     }
 
@@ -79,22 +91,31 @@ public class MainFrame extends Application {
         resetSolutionObjects();
         board.reset();
         drawBoard();
-        updateSolutionObjects();
     }
 
     private void solveBoard() {
-        resetSolutionObjects();
+        solveButton.setDisable(true);
+        solveButton.setText("Solving...");
+
+        fixedPiecesOnBoard = board.getPiecesOnBoard();
 
         List<Integer> diceNumbers = Arrays.stream(dices).map(Dice::getNumber).toList();
         new Thread(() -> solver.solve(board.copy(), diceNumbers)).start();
     }
 
-    private void resetSolutionObjects() {
+    public void resetSolutionObjects() {
         solver.stop();
-        solvedState = false;
-        solutionsFound = 0;
+        anySolutionFound = false;
+        numberSolutionsFound = 0;
         currentSolutionNumber = 0;
+
+        solveButton.setDisable(false);
+        solveButton.setText("Solve");
+
+        updateSolutionObjects();
     }
+
+
 
     private void initCanvas() {
         drawBoard();
@@ -132,11 +153,12 @@ public class MainFrame extends Application {
         Field clickedField = board.getFieldOnBoard(row, column);
         if (clickedField.isOccupied()) {
             board.removePieceFromBoard(clickedField.getOccupationPiece());
+            resetSolutionObjects();
         }
     }
 
     private void drawPiecesAndNumbers() {
-        board.getPiecesOnBoard().forEach(piece -> piece.drawPiece(graphics,
+        board.getPiecesOnBoard().forEach(piece -> piece.drawPiece(graphics, fixedPiecesOnBoard,
                 3, 2, FIELD_SIZE, 8, 6));
         board.getAllFields().stream()
                 .filter(field -> !field.isOccupied())
@@ -182,7 +204,7 @@ public class MainFrame extends Application {
         VBox vBox = new VBox(30);
         vBox.setAlignment(Pos.TOP_CENTER);
         for (int i = 0; i < 6; i++) {
-            dices[i] = new Dice(i + 1);
+            dices[i] = new Dice(this, i + 1);
             vBox.getChildren().add(dices[i]);
         }
 
@@ -193,7 +215,7 @@ public class MainFrame extends Application {
 
         Font buttonFont = Font.font(20);
 
-        Button solveButton = new Button("Solve");
+        solveButton = new Button("Solve");
         solveButton.setFont(buttonFont);
         solveButton.onActionProperty().set(e -> solveBoard());
 
@@ -243,5 +265,4 @@ public class MainFrame extends Application {
     public static void main(String[] args) {
         launch();
     }
-
 }
