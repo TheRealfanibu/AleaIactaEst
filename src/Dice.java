@@ -1,9 +1,8 @@
 import javafx.scene.canvas.Canvas;
 import javafx.scene.canvas.GraphicsContext;
-import javafx.scene.input.*;
+import javafx.scene.input.MouseButton;
+import javafx.scene.input.MouseEvent;
 import javafx.scene.paint.Color;
-
-import javax.xml.crypto.Data;
 
 public class Dice extends Canvas {
 
@@ -22,7 +21,7 @@ public class Dice extends Canvas {
 
     private long lastEvent;
 
-    private MainFrame mainFrame;
+    private final MainFrame mainFrame;
 
     public Dice(MainFrame mainFrame, int number) {
         super(MainFrame.FIELD_SIZE, MainFrame.FIELD_SIZE);

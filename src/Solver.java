@@ -18,20 +18,26 @@ public class Solver {
         solutions.clear();
 
         int[] diceOccurrences = countOccurrencesOfNumbers(diceNumbers);
+        int[] visibleDiceNumbers = board.countVisibleDiceNumbers();
+
         List<Piece> availablePieces = board.getAvailablePieces();
         availablePieces.sort(Comparator.comparingInt(Piece::getAmountOccupations));
 
-        solveWithCurrentBoard(board, availablePieces, diceOccurrences);
+        solveWithCurrentBoard(board, availablePieces, diceOccurrences, visibleDiceNumbers);
         mainFrame.indicateSolvingFinished();
     }
 
-    public void solveWithCurrentBoard(Board board, List<Piece> availablePieces, int[] diceOccurrences) {
+    public void solveWithCurrentBoard(Board board, List<Piece> availablePieces, int[] diceOccurrences, int[] visibleDiceNumbers) {
 
         if(availablePieces.isEmpty()) {
             if (isValidSolution(board, diceOccurrences)) {
                 solutions.add(board.copy());
                 mainFrame.updateSolutionStats();
             }
+            return;
+        }
+
+        if(!areEnoughSolutionDiceNumbersAvailable(diceOccurrences, visibleDiceNumbers)) {
             return;
         }
 
@@ -45,13 +51,41 @@ public class Solver {
 
                     if (fitsInPlace(board, orientation, rowOffset, columnOffset)) {
                             board.placePieceOnBoard(nextPiece, orientation, rowOffset, columnOffset);
-                            solveWithCurrentBoard(board, availablePieces, diceOccurrences);
+                            int[] diceNumbersOccupied = board.countDiceNumbersOfFields(nextPiece.getOccupiedFields().stream());
+                            updateVisibleDiceNumbers(visibleDiceNumbers, diceNumbersOccupied, false);
+
+                            solveWithCurrentBoard(board, availablePieces, diceOccurrences, visibleDiceNumbers);
+
+                            updateVisibleDiceNumbers(visibleDiceNumbers, diceNumbersOccupied, true);
                             board.removeLastPieceFromBoard();
                     }
                 }
             }
         }
         availablePieces.add(0, nextPiece);
+    }
+
+    private void updateVisibleDiceNumbers(int[] visibleDiceNumbers, int[] diceNumbers, boolean add) {
+        for (int diceNumber = 0; diceNumber < 7; diceNumber++) {
+            if (add) {
+                visibleDiceNumbers[diceNumber] += diceNumbers[diceNumber];
+            } else {
+                visibleDiceNumbers[diceNumber] -= diceNumbers[diceNumber];
+            }
+        }
+    }
+
+    private boolean areEnoughSolutionDiceNumbersAvailable(int[] diceOccurrences, int[] visibleDiceNumbers) {
+        if (visibleDiceNumbers[0] == 0) { // no number-free field visible -> 7 dice numbers on field
+            return false;
+        }
+
+        for (int diceNumber = 1; diceNumber <= 6 ; diceNumber++) {
+            if (visibleDiceNumbers[diceNumber] < diceOccurrences[diceNumber]) { // too many number fields occupied
+                return false;
+            }
+        }
+        return true;
     }
 
     public void stop() {

@@ -66,7 +66,7 @@ public class MainFrame extends Application {
                         anySolutionFound = true;
                         if (numberSolutionsFound > 0) {
                             currentSolutionNumber = 1;
-                            board = solver.getSolutions().get(0); // todo: can raise exception with next run
+                            board = solver.getSolutions().get(0);
                             drawBoard();
                         }
                     }

@@ -2,6 +2,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.stream.Stream;
 
 public class Board {
 
@@ -47,6 +48,16 @@ public class Board {
         placePieceOnBoard(chair, chair.getOrientations()[1], 2,2);
         placePieceOnBoard(stair, stair.getOrientations()[2],5, 2 );
         placePieceOnBoard(straight, straight.getOrientations()[0], 1,1);*/
+    }
+
+    public int[] countVisibleDiceNumbers() {
+        return countDiceNumbersOfFields(allFields.stream().filter(field -> !field.isOccupied()));
+    }
+
+    public int[] countDiceNumbersOfFields(Stream<Field> fieldStream) {
+        int[] diceNumbers = new int[7];
+       fieldStream.forEach(field -> diceNumbers[field.getNumber()]++);
+        return diceNumbers;
     }
 
     public void placePieceOnBoard(Piece piece, PieceOrientation orientation, int rowOffset, int columnOffset) {
