@@ -17,7 +17,9 @@ public class Solver {
         solving = true;
         solutions.clear();
 
-        int[] diceOccurrences = countOccurrencesOfNumbers(diceNumbers);
+        int[] diceOccurrences = board.countDiceNumbers(diceNumbers.stream());
+        diceOccurrences[0] = 1; // one field must be empty
+
         int[] visibleDiceNumbers = board.countVisibleDiceNumbers();
 
         List<Piece> availablePieces = board.getAvailablePieces();
@@ -30,7 +32,7 @@ public class Solver {
     public void solveWithCurrentBoard(Board board, List<Piece> availablePieces, int[] diceOccurrences, int[] visibleDiceNumbers) {
 
         if(availablePieces.isEmpty()) {
-            if (isValidSolution(board, diceOccurrences)) {
+            if (Arrays.equals(diceOccurrences, visibleDiceNumbers)) { // valid solution
                 solutions.add(board.copy());
                 mainFrame.updateSolutionStats();
             }
@@ -90,24 +92,6 @@ public class Solver {
 
     public void stop() {
         solving = false;
-    }
-
-    private boolean isValidSolution(Board board, int[] diceOccurrences) {
-        List<Integer> fieldNumbers = board.getAllFields()
-                .stream()
-                .filter(field -> !field.isOccupied() && field.getNumber() != 0)
-                .map(Field::getNumber)
-                .toList();
-        int[] solutionNumberOccurrences = countOccurrencesOfNumbers(fieldNumbers);
-        return Arrays.equals(diceOccurrences, solutionNumberOccurrences);
-    }
-
-    private int[] countOccurrencesOfNumbers(List<Integer> numbers) {
-        int[] occurrences = new int[7];
-        for(int number : numbers) {
-            occurrences[number]++;
-        }
-        return occurrences;
     }
 
     private boolean fitsInPlace(Board board, PieceOrientation orientation, int rowOffset, int columnOffset) {

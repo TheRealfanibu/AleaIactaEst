@@ -28,26 +28,6 @@ public class Board {
         initField();
 
         allPieces.forEach(piece -> piece.setBoard(this));
-
-        /*Piece thunder = PieceCollection.ALL_PIECES[0];
-        Piece smallL = PieceCollection.ALL_PIECES[1];
-        Piece bigL = PieceCollection.ALL_PIECES[2];
-        Piece w = PieceCollection.ALL_PIECES[3];
-        Piece block = PieceCollection.ALL_PIECES[4];
-        Piece c = PieceCollection.ALL_PIECES[5];
-        Piece chair = PieceCollection.ALL_PIECES[6];
-        Piece stair = PieceCollection.ALL_PIECES[7];
-        Piece straight = PieceCollection.ALL_PIECES[8];
-
-        placePieceOnBoard(thunder, thunder.getOrientations()[1], 2, 0);
-        placePieceOnBoard(smallL, smallL.getOrientations()[1], 5, 4);
-        placePieceOnBoard(bigL, bigL.getOrientations()[1], 0,0);
-        placePieceOnBoard(w, w.getOrientations()[0], 4,0);
-        placePieceOnBoard(block, block.getOrientations()[0], 0,4);
-        placePieceOnBoard(c, c.getOrientations()[3], 2, 5);
-        placePieceOnBoard(chair, chair.getOrientations()[1], 2,2);
-        placePieceOnBoard(stair, stair.getOrientations()[2],5, 2 );
-        placePieceOnBoard(straight, straight.getOrientations()[0], 1,1);*/
     }
 
     public int[] countVisibleDiceNumbers() {
@@ -55,8 +35,12 @@ public class Board {
     }
 
     public int[] countDiceNumbersOfFields(Stream<Field> fieldStream) {
+        return countDiceNumbers(fieldStream.map(Field::getNumber));
+    }
+
+    public int[] countDiceNumbers(Stream<Integer> numbers) {
         int[] diceNumbers = new int[7];
-       fieldStream.forEach(field -> diceNumbers[field.getNumber()]++);
+        numbers.forEach(number -> diceNumbers[number]++);
         return diceNumbers;
     }
 

@@ -7,6 +7,8 @@ import javafx.scene.canvas.Canvas;
 import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
+import javafx.scene.image.Image;
+import javafx.scene.image.ImageView;
 import javafx.scene.input.MouseButton;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.*;
@@ -14,8 +16,11 @@ import javafx.scene.paint.Color;
 import javafx.scene.text.Font;
 import javafx.stage.Stage;
 
+import java.io.InputStream;
+import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Objects;
 
 public class MainFrame extends Application {
     public static final int FIELD_SIZE = 80;
@@ -31,7 +36,7 @@ public class MainFrame extends Application {
     private final Solver solver = new Solver(this);
 
     private Button solveButton;
-    private Button previusSolutionButton, nextSolutionButton;
+    private Button firstSolutionButton, previusSolutionButton, nextSolutionButton, lastSolutionButton;
     private Label solutionLabel;
 
     private List<Piece> fixedPiecesOnBoard;
@@ -80,8 +85,10 @@ public class MainFrame extends Application {
 
 
     private synchronized void updateSolutionObjects() {
+        firstSolutionButton.setDisable(currentSolutionNumber <= 1);
         previusSolutionButton.setDisable(currentSolutionNumber <= 1);
         nextSolutionButton.setDisable(currentSolutionNumber >= numberSolutionsFound);
+        lastSolutionButton.setDisable(currentSolutionNumber >= numberSolutionsFound);
 
         String solutionNumbers = anySolutionFound ? currentSolutionNumber + "/" + numberSolutionsFound : "-/-";
         solutionLabel.setText("Solution: " + solutionNumbers);
@@ -230,23 +237,19 @@ public class MainFrame extends Application {
         HBox solutionBox = new HBox(10);
         solutionBox.setAlignment(Pos.CENTER);
 
-        previusSolutionButton = createSolutionButton(buttonFont, "Previous");
-        previusSolutionButton.onActionProperty().set(e -> {
-            currentSolutionNumber--;
-            updateSolution();
-        });
+        firstSolutionButton = createSolutionButton("first", () -> currentSolutionNumber = 1);
 
-        nextSolutionButton = createSolutionButton(buttonFont, "Next");
-        nextSolutionButton.onActionProperty().set(e -> {
-            currentSolutionNumber++;
-            updateSolution();
-        });
+        previusSolutionButton = createSolutionButton("previous", () -> currentSolutionNumber--);
+
+        nextSolutionButton = createSolutionButton("next", () -> currentSolutionNumber++);
+
+        lastSolutionButton = createSolutionButton("last", () -> currentSolutionNumber = numberSolutionsFound);
 
         solutionLabel = new Label();
         solutionLabel.setFont(buttonFont);
         updateSolutionObjects();
 
-        solutionBox.getChildren().addAll(solutionLabel, previusSolutionButton, nextSolutionButton);
+        solutionBox.getChildren().addAll(firstSolutionButton, previusSolutionButton, solutionLabel, nextSolutionButton, lastSolutionButton);
 
         VBox buttonBox = new VBox(upperBox, solutionBox);
         buttonBox.setSpacing(10);
@@ -254,10 +257,19 @@ public class MainFrame extends Application {
         return buttonBox;
     }
 
-    private Button createSolutionButton(Font font, String text) {
-        Button solutionButton = new Button(text);
-        solutionButton.setFont(font);
+    private Button createSolutionButton(String imageName, Runnable action) {
+        Image image = new Image(Objects.requireNonNull(getClass().getResourceAsStream("res/" + imageName + ".png")));
+        Button solutionButton = new Button();
+        ImageView imageView = new ImageView(image);
+        imageView.setFitHeight(30);
+        imageView.setFitWidth(30 * image.getWidth() / image.getHeight());
+        solutionButton.setGraphic(imageView);
+
         solutionButton.setDisable(true);
+        solutionButton.onActionProperty().set(e ->  {
+            action.run();
+            updateSolution();
+        });
         return solutionButton;
     }
 
