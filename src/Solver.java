@@ -45,8 +45,8 @@ public class Solver {
 
         Piece nextPiece = availablePieces.remove(0);
         for(PieceOrientation orientation : nextPiece.getOrientations()) {
-            for (int rowOffset = 0; rowOffset < 7 - orientation.getHeight(); rowOffset++) {
-                for (int columnOffset = 0; columnOffset < 7 - orientation.getWidth(); columnOffset++) {
+            for (int rowOffset = 0; rowOffset <= 7 - orientation.getHeight(); rowOffset++) {
+                for (int columnOffset = 0; columnOffset <= 7 - orientation.getWidth(); columnOffset++) {
                     if (!solving) {
                         return;
                     }
@@ -78,11 +78,7 @@ public class Solver {
     }
 
     private boolean areEnoughSolutionDiceNumbersAvailable(int[] diceOccurrences, int[] visibleDiceNumbers) {
-        if (visibleDiceNumbers[0] == 0) { // no number-free field visible -> 7 dice numbers on field
-            return false;
-        }
-
-        for (int diceNumber = 1; diceNumber <= 6 ; diceNumber++) {
+        for (int diceNumber = 0; diceNumber < 7 ; diceNumber++) {
             if (visibleDiceNumbers[diceNumber] < diceOccurrences[diceNumber]) { // too many number fields occupied
                 return false;
             }

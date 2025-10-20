@@ -11,13 +11,14 @@ import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.input.MouseButton;
 import javafx.scene.input.MouseEvent;
-import javafx.scene.layout.*;
+import javafx.scene.layout.BorderPane;
+import javafx.scene.layout.HBox;
+import javafx.scene.layout.Pane;
+import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
 import javafx.scene.text.Font;
 import javafx.stage.Stage;
 
-import java.io.InputStream;
-import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
@@ -38,6 +39,8 @@ public class MainFrame extends Application {
     private Button solveButton;
     private Button firstSolutionButton, previusSolutionButton, nextSolutionButton, lastSolutionButton;
     private Label solutionLabel;
+
+
 
     private List<Piece> fixedPiecesOnBoard;
 
@@ -249,7 +252,7 @@ public class MainFrame extends Application {
         solutionLabel.setFont(buttonFont);
         updateSolutionObjects();
 
-        solutionBox.getChildren().addAll(firstSolutionButton, previusSolutionButton, solutionLabel, nextSolutionButton, lastSolutionButton);
+        solutionBox.getChildren().addAll(solutionLabel, firstSolutionButton, previusSolutionButton, nextSolutionButton, lastSolutionButton);
 
         VBox buttonBox = new VBox(upperBox, solutionBox);
         buttonBox.setSpacing(10);

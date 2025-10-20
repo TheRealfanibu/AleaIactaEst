@@ -70,7 +70,7 @@ public class Board {
 
     private void removePieceFieldInfo(Piece piece) {
         piece.getOccupiedFields().forEach(field -> field.setOccupationPiece(null));
-        piece.setOccupiedFields(null);
+        //piece.setOccupiedFields(null);
     }
 
 

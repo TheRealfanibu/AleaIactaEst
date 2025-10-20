@@ -11,8 +11,8 @@ public class PieceOrientation {
     public PieceOrientation(FieldPosition[] positions) {
         this.positions = positions;
 
-        width = Arrays.stream(positions).mapToInt(FieldPosition::column).max().orElseThrow();
-        height = Arrays.stream(positions).mapToInt(FieldPosition::row).max().orElseThrow();
+        width = Arrays.stream(positions).mapToInt(FieldPosition::column).max().orElseThrow() + 1;
+        height = Arrays.stream(positions).mapToInt(FieldPosition::row).max().orElseThrow() + 1;
     }
 
     public FieldPosition[] getPositions() {
