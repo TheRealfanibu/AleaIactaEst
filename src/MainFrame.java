@@ -24,6 +24,7 @@ import java.util.List;
 import java.util.Objects;
 
 public class MainFrame extends Application {
+
     public static final int FIELD_SIZE = 80;
 
     private static final int CANVAS_SIZE = 7 * FIELD_SIZE;
@@ -32,7 +33,9 @@ public class MainFrame extends Application {
     private final GraphicsContext graphics = canvas.getGraphicsContext2D();
 
     private final Dice[] dices = new Dice[6];
-    private Board board = new Board();
+    private Board board = new Board(FIELD_SIZE);
+
+    private final PieceSidebar pieceSidebar = new PieceSidebar();
 
     private final Solver solver = new Solver(this);
 
@@ -49,8 +52,13 @@ public class MainFrame extends Application {
     private int numberSolutionsFound;
 
 
+    private void updatePieceSidebar() {
+        pieceSidebar.update(board.getAvailablePieces());
+    }
+
     private void updateSolution() {
         board = solver.getSolutions().get(currentSolutionNumber - 1);
+        updatePieceSidebar();
         drawBoard();
         updateSolutionObjects();
     }
@@ -74,8 +82,7 @@ public class MainFrame extends Application {
                         anySolutionFound = true;
                         if (numberSolutionsFound > 0) {
                             currentSolutionNumber = 1;
-                            board = solver.getSolutions().get(0);
-                            drawBoard();
+                            updateSolution();
                         }
                     }
 
@@ -100,6 +107,7 @@ public class MainFrame extends Application {
     private void resetBoard() {
         resetSolutionObjects();
         board.reset();
+        updatePieceSidebar();
         drawBoard();
     }
 
@@ -129,6 +137,7 @@ public class MainFrame extends Application {
 
     private void initCanvas() {
         drawBoard();
+        updatePieceSidebar();
         canvas.setOnMouseClicked(this::canvasOnClicked);
     }
 
@@ -152,7 +161,6 @@ public class MainFrame extends Application {
     private void canvasOnClicked(MouseEvent mouseEvent) {
         if (mouseEvent.getButton() == MouseButton.SECONDARY) {
             removePiece(mouseEvent.getX(), mouseEvent.getY());
-            drawBoard();
         }
     }
 
@@ -163,7 +171,9 @@ public class MainFrame extends Application {
         Field clickedField = board.getFieldOnBoard(row, column);
         if (clickedField.isOccupied()) {
             board.removePieceFromBoard(clickedField.getOccupationPiece());
+            updatePieceSidebar();
             resetSolutionObjects();
+            drawBoard();
         }
     }
 
@@ -195,13 +205,13 @@ public class MainFrame extends Application {
         centerBox.setAlignment(Pos.TOP_LEFT);
 
         VBox middleBox = new VBox(20);
-        middleBox.setAlignment(Pos.CENTER);
+        middleBox.setAlignment(Pos.TOP_CENTER);
 
         Pane buttonBox = createButtonBox();
 
         middleBox.getChildren().addAll(canvas, buttonBox);
 
-        centerBox.getChildren().addAll(createDicePane(), middleBox);
+        centerBox.getChildren().addAll(createDicePane(), middleBox, pieceSidebar);
         layout.setCenter(centerBox);
 
         layout.setPadding(new Insets(30));

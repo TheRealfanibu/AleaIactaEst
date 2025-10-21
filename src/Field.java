@@ -5,17 +5,20 @@ public class Field {
     private final FieldPosition position;
     private final int number;
 
-    public Field(int row, int column, int number) {
+    private final int fieldSize;
+
+    public Field(int row, int column, int number, int fieldSize) {
         this.number = number;
+        this.fieldSize = fieldSize;
         position = new FieldPosition(row, column);
     }
 
     public int getTopLeftCornerXCoordinate() {
-        return position.column() * MainFrame.FIELD_SIZE;
+        return position.column() * fieldSize;
     }
 
     public int getTopLeftCornerYCoordinate() {
-        return position.row() * MainFrame.FIELD_SIZE;
+        return position.row() * fieldSize;
     }
 
     public boolean isOccupied() {
