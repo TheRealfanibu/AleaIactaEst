@@ -1,22 +1,27 @@
 import javafx.geometry.Pos;
 import javafx.scene.canvas.Canvas;
 import javafx.scene.canvas.GraphicsContext;
+import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 
-public class PieceSidebar extends VBox {
+public class PieceSidebar extends HBox {
 
     private static final int FIELD_SIZE = 50;
+
+    private static final int SPACING = 10;
 
     private final List<Board> boards = new ArrayList<>();
     private final List<Canvas> canvases = new ArrayList<>();
 
+
+
     public PieceSidebar() {
         setAlignment(Pos.TOP_LEFT);
-        setSpacing(10);
+        setSpacing(SPACING);
 
         init();
     }
@@ -55,6 +60,22 @@ public class PieceSidebar extends VBox {
                 .map(canvases::get)
                 .toList();
 
-        getChildren().setAll(sidebarCanvases);
+        int threshold = 5;
+        if (availablePieces.size() <= threshold) {
+            VBox vBox = new VBox(SPACING);
+            vBox.getChildren().setAll(sidebarCanvases);
+            getChildren().setAll(vBox);
+        } else {
+            List<Canvas> leftCanvases = sidebarCanvases.stream().limit(threshold).toList();
+            List<Canvas> rightCanvases = sidebarCanvases.stream().skip(threshold).toList();
+
+            VBox leftVBox = new VBox(SPACING);
+            leftVBox.getChildren().setAll(leftCanvases);
+            VBox rightVBox = new VBox(SPACING);
+            rightVBox.getChildren().setAll(rightCanvases);
+
+            getChildren().setAll(leftVBox, rightVBox);
+        }
+
     }
 }
