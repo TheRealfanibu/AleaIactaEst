@@ -3,10 +3,10 @@ import javafx.scene.SnapshotParameters;
 import javafx.scene.canvas.Canvas;
 import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.image.Image;
-import javafx.scene.image.ImageView;
-import javafx.scene.image.PixelWriter;
-import javafx.scene.image.WritableImage;
-import javafx.scene.input.*;
+import javafx.scene.input.ClipboardContent;
+import javafx.scene.input.Dragboard;
+import javafx.scene.input.MouseEvent;
+import javafx.scene.input.TransferMode;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
@@ -23,8 +23,6 @@ public class PieceSidebar extends HBox {
 
     private final List<Board> boards = new ArrayList<>();
     private final List<Canvas> canvases = new ArrayList<>();
-
-    private Image testImg = new Image(getClass().getResourceAsStream("res/first.png"));
 
     public PieceSidebar() {
         setAlignment(Pos.TOP_LEFT);
