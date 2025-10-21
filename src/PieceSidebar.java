@@ -1,8 +1,15 @@
 import javafx.geometry.Pos;
+import javafx.scene.SnapshotParameters;
 import javafx.scene.canvas.Canvas;
 import javafx.scene.canvas.GraphicsContext;
+import javafx.scene.image.Image;
+import javafx.scene.image.ImageView;
+import javafx.scene.image.PixelWriter;
+import javafx.scene.image.WritableImage;
+import javafx.scene.input.*;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
+import javafx.scene.paint.Color;
 
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -17,7 +24,7 @@ public class PieceSidebar extends HBox {
     private final List<Board> boards = new ArrayList<>();
     private final List<Canvas> canvases = new ArrayList<>();
 
-
+    private Image testImg = new Image(getClass().getResourceAsStream("res/first.png"));
 
     public PieceSidebar() {
         setAlignment(Pos.TOP_LEFT);
@@ -41,6 +48,7 @@ public class PieceSidebar extends HBox {
                     orientation.getHeight() * FIELD_SIZE);
 
             refreshCanvas(board, canvas);
+            canvas.setOnDragDetected(this::onPieceDrag);
             canvases.add(canvas);
         }
     }
@@ -49,7 +57,31 @@ public class PieceSidebar extends HBox {
         Piece pieceOnCanvas = board.getPiecesOnBoard().get(0);
         GraphicsContext graphics = canvas.getGraphicsContext2D();
         graphics.clearRect(0, 0, canvas.getWidth(), canvas.getHeight());
-        pieceOnCanvas.drawPiece(graphics, List.of(), 2, 1, FIELD_SIZE, 5, 5);
+        pieceOnCanvas.drawPiece(graphics, List.of(), 2, 1, FIELD_SIZE, 3, 4);
+    }
+
+    private void onPieceDrag(MouseEvent e) {
+        int row = (int) (e.getY() / FIELD_SIZE);
+        int column = (int) (e.getX() / FIELD_SIZE);
+
+        Canvas source = (Canvas) e.getSource();
+        Board board = boards.get(canvases.indexOf(source));
+
+        if (board.getFieldOnBoard(row, column).isOccupied()) {
+            Dragboard dragboard = source.startDragAndDrop(TransferMode.MOVE);
+
+            ClipboardContent content = new ClipboardContent();
+            int pieceId = board.getPiecesOnBoard().get(0).getId();
+            content.putString(String.valueOf(pieceId));
+
+            dragboard.setContent(content);
+
+            SnapshotParameters params = new SnapshotParameters();
+            params.setFill(Color.TRANSPARENT);
+            dragboard.setDragView(source.snapshot(params, null), e.getX(), e.getY());
+        }
+
+        e.consume();
     }
 
 
@@ -60,14 +92,14 @@ public class PieceSidebar extends HBox {
                 .map(canvases::get)
                 .toList();
 
-        int threshold = 5;
-        if (availablePieces.size() <= threshold) {
+        int splittingThreshold = 4;
+        if (availablePieces.size() <= splittingThreshold) {
             VBox vBox = new VBox(SPACING);
             vBox.getChildren().setAll(sidebarCanvases);
             getChildren().setAll(vBox);
         } else {
-            List<Canvas> leftCanvases = sidebarCanvases.stream().limit(threshold).toList();
-            List<Canvas> rightCanvases = sidebarCanvases.stream().skip(threshold).toList();
+            List<Canvas> leftCanvases = sidebarCanvases.stream().limit(splittingThreshold).toList();
+            List<Canvas> rightCanvases = sidebarCanvases.stream().skip(splittingThreshold).toList();
 
             VBox leftVBox = new VBox(SPACING);
             leftVBox.getChildren().setAll(leftCanvases);
