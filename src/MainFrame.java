@@ -1,4 +1,3 @@
-import com.sun.tools.javac.Main;
 import javafx.application.Application;
 import javafx.application.Platform;
 import javafx.geometry.Bounds;
@@ -22,8 +21,10 @@ import javafx.scene.paint.Color;
 import javafx.scene.text.Font;
 import javafx.stage.Stage;
 
-import java.util.*;
-import java.util.function.IntFunction;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Objects;
 import java.util.function.ToIntFunction;
 
 public class MainFrame extends Application {
@@ -397,14 +398,5 @@ public class MainFrame extends Application {
 
         stage.setScene(scene);
         stage.show();
-    }
-
-
-    public void setDragPieceId(int dragPieceId) {
-        this.dragPieceId = dragPieceId;
-    }
-
-    public void setDragPieceOrientation(PieceOrientation dragPieceOrientation) {
-        this.dragPieceOrientation = dragPieceOrientation;
     }
 }
