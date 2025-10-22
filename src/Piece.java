@@ -166,11 +166,7 @@ public class Piece {
         int row = field.getRow() + rowOffset;
         int column = field.getColumn() + columnOffset;
 
-        return !isOutOfBounds(row, column) && board.getFieldOnBoard(row, column).getOccupationPiece() == this;
-    }
-
-    private boolean isOutOfBounds(int row, int column) {
-        return row < 0 || row > 6 || column < 0 || column > 6;
+        return !Board.isOutOfBounds(row, column) && board.getFieldOnBoard(row, column).getOccupationPiece() == this;
     }
 
     public void setBoard(Board board) {

@@ -51,7 +51,7 @@ public class Solver {
                         return;
                     }
 
-                    if (fitsInPlace(board, orientation, rowOffset, columnOffset)) {
+                    if (board.fitsInPlace(orientation, rowOffset, columnOffset)) {
                             board.placePieceOnBoard(nextPiece, orientation, rowOffset, columnOffset);
                             int[] diceNumbersOccupied = board.countDiceNumbersOfFields(nextPiece.getOccupiedFields().stream());
                             updateVisibleDiceNumbers(visibleDiceNumbers, diceNumbersOccupied, false);
@@ -88,15 +88,6 @@ public class Solver {
 
     public void stop() {
         solving = false;
-    }
-
-    private boolean fitsInPlace(Board board, PieceOrientation orientation, int rowOffset, int columnOffset) {
-        for(FieldPosition pieceField : orientation.getPositions()) {
-            if (board.getFieldOnBoard(pieceField.row() + rowOffset, pieceField.column() + columnOffset).isOccupied()) {
-                return false;
-            }
-        }
-        return true;
     }
 
     public boolean isSolving() {

@@ -4,16 +4,14 @@ import javafx.scene.canvas.Canvas;
 import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.image.ImageView;
 import javafx.scene.image.WritableImage;
-import javafx.scene.input.ClipboardContent;
-import javafx.scene.input.Dragboard;
-import javafx.scene.input.MouseEvent;
-import javafx.scene.input.TransferMode;
+import javafx.scene.input.*;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
 import javafx.scene.transform.Transform;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
 
@@ -72,6 +70,7 @@ public class PieceSidebar extends HBox {
         Board board = boards.get(canvases.indexOf(source));
 
         if (board.getFieldOnBoard(row, column).isOccupied()) {
+
             double scaleWidth = (double) MainFrame.FIELD_SIZE / FIELD_SIZE;
             double scaleHeight = (double) MainFrame.FIELD_SIZE / FIELD_SIZE;
 
@@ -85,15 +84,13 @@ public class PieceSidebar extends HBox {
 
             int offsetX = (int) (e.getX() * scaleWidth);
             int offsetY = (int) (e.getY() * scaleHeight);
-            mainFrame.addFloatingPieceView(pieceView, offsetX, offsetY);
+            mainFrame.addFloatingPieceView(pieceView, (int) e.getX(), (int) e.getY(), offsetX, offsetY);
 
-            Dragboard dragboard = pieceView.startDragAndDrop(TransferMode.MOVE);
-
-            ClipboardContent content = new ClipboardContent();
             Piece piece = board.getPiecesOnBoard().get(0);
-            content.putString(String.valueOf(piece.getId()));
+            mainFrame.setDragPieceId(piece.getId());
+            mainFrame.setDragPieceOrientation(piece.getOrientationOnBoard());
 
-            dragboard.setContent(content);
+            source.startFullDrag();
         }
 
         e.consume();

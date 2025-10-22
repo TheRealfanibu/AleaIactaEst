@@ -34,6 +34,10 @@ public class Board {
         allPieces.forEach(piece -> piece.setBoard(this));
     }
 
+    public static boolean isOutOfBounds(int row, int column) {
+        return row < 0 || row > 6 || column < 0 || column > 6;
+    }
+
     public int[] countVisibleDiceNumbers() {
         return countDiceNumbersOfFields(allFields.stream().filter(field -> !field.isOccupied()));
     }
@@ -111,6 +115,10 @@ public class Board {
         return allFields;
     }
 
+    public List<Piece> getAllPieces() {
+        return allPieces;
+    }
+
     public Board copy() {
         Board copyBoard = new Board(fieldSize);
         for (Piece piece : piecesOnBoard) {
@@ -119,5 +127,16 @@ public class Board {
                     piece.getRowOffsetOnBoard(), piece.getColumnOffsetOnBoard());
         }
         return copyBoard;
+    }
+
+    public boolean fitsInPlace(PieceOrientation orientation, int rowOffset, int columnOffset) {
+        for(FieldPosition pieceField : orientation.getPositions()) {
+            int row = pieceField.row() + rowOffset;
+            int column = pieceField.column() + columnOffset;
+            if (isOutOfBounds(row, column) || getFieldOnBoard(row, column).isOccupied()) {
+                return false;
+            }
+        }
+        return true;
     }
 }

@@ -1,5 +1,7 @@
+import com.sun.javafx.event.EventDispatchChainImpl;
 import javafx.application.Application;
 import javafx.application.Platform;
+import javafx.geometry.Bounds;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
@@ -9,14 +11,13 @@ import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
-import javafx.scene.input.MouseButton;
-import javafx.scene.input.MouseEvent;
-import javafx.scene.input.TransferMode;
+import javafx.scene.input.*;
 import javafx.scene.layout.*;
 import javafx.scene.paint.Color;
 import javafx.scene.text.Font;
 import javafx.stage.Stage;
 
+import java.sql.Time;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
@@ -53,25 +54,67 @@ public class MainFrame extends Application {
     private int floatingPieceOffsetX;
     private int floatingPieceOffsetY;
 
-    public void addFloatingPieceView(ImageView pieceView, int offsetX, int offsetY) {
+    private int dragPieceId;
+
+    private PieceOrientation dragPieceOrientation;
+
+    private Field fieldToBePlaced;
+
+
+    public void addFloatingPieceView(ImageView pieceView, int mouseX, int mouseY, int offsetX, int offsetY) {
         floatingPieceView = pieceView;
         floatingPieceOffsetX = offsetX;
         floatingPieceOffsetY = offsetY;
-        rootPane.getChildren().add(pieceView);
+
+        floatingPieceView.setLayoutX(mouseX - offsetX);
+        floatingPieceView.setLayoutY(mouseY - offsetY);
+        floatingPieceView.setVisible(false);
+        rootPane.getChildren().add(floatingPieceView);
+
+        Platform.runLater(() -> {
+            try {
+                Thread.sleep(50);
+            } catch (InterruptedException e) {
+                throw new RuntimeException(e);
+            }
+            floatingPieceView.setVisible(true);
+        });
+    }
+
+    private void initCanvas() {
+        drawBoard();
+        updatePieceSidebar();
+        canvas.setOnMouseClicked(this::canvasOnClicked);
+    }
+
+    private boolean isPiecePlaceableOnCanvas(MouseDragEvent event) {
+        Bounds canvasCoords = canvas.localToScene(canvas.getBoundsInLocal());
+        int canvasMouseX = (int) (event.getX() - canvasCoords.getMinX());
+        int canvasMouseY = (int) (event.getY() - canvasCoords.getMinY());
+        int rowToBePlaced = (int) Math.round((double) (canvasMouseY - floatingPieceOffsetY) / FIELD_SIZE);
+        int columnToBePlaced = (int) Math.round(( double)(canvasMouseX - floatingPieceOffsetX) / FIELD_SIZE);
+
+        if (board.fitsInPlace(dragPieceOrientation, rowToBePlaced, columnToBePlaced)) {
+            fieldToBePlaced = board.getFieldOnBoard(rowToBePlaced, columnToBePlaced);
+            int fieldSceneX = (int) (canvasCoords.getMinX() + fieldToBePlaced.getTopLeftCornerXCoordinate());
+            int fieldSceneY = (int) (canvasCoords.getMinY() + fieldToBePlaced.getTopLeftCornerYCoordinate());
+            floatingPieceView.relocate(fieldSceneX, fieldSceneY);
+            return true;
+        }
+        return false;
     }
 
     private void initFloatingPieceViewHandler() {
-        rootPane.setOnDragOver(event -> {
-            int viewX = (int) (event.getX() - floatingPieceOffsetX);
-            int viewY = (int) (event.getY() - floatingPieceOffsetY);
-            floatingPieceView.relocate(viewX, viewY);
+        rootPane.setOnMouseDragOver(event -> {
+            if(!isPiecePlaceableOnCanvas(event)) {
+                int viewX = (int) (event.getX() - floatingPieceOffsetX);
+                int viewY = (int) (event.getY() - floatingPieceOffsetY);
+                floatingPieceView.relocate(viewX, viewY);
+            }
+            event.consume();
         });
 
-
-        rootPane.setOnDragExited(event -> {
-            rootPane.getChildren().remove(floatingPieceView);
-            floatingPieceView = null;
-        });
+        rootPane.setOnMouseDragReleased(event -> rootPane.getChildren().remove(floatingPieceView));
     }
 
     private void updatePieceSidebar() {
@@ -156,10 +199,10 @@ public class MainFrame extends Application {
     }
 
 
-    private void initCanvas() {
-        drawBoard();
-        updatePieceSidebar();
-        canvas.setOnMouseClicked(this::canvasOnClicked);
+    private void canvasOnClicked(MouseEvent mouseEvent) {
+        if (mouseEvent.getButton() == MouseButton.SECONDARY) {
+            removePiece(mouseEvent.getX(), mouseEvent.getY());
+        }
     }
 
     private synchronized void drawBoard() {
@@ -177,12 +220,6 @@ public class MainFrame extends Application {
         }
 
         drawPiecesAndNumbers();
-    }
-
-    private void canvasOnClicked(MouseEvent mouseEvent) {
-        if (mouseEvent.getButton() == MouseButton.SECONDARY) {
-            removePiece(mouseEvent.getX(), mouseEvent.getY());
-        }
     }
 
     private void removePiece(double mouseX, double mouseY) {
@@ -312,6 +349,14 @@ public class MainFrame extends Application {
         stage.show();
     }
 
+
+    public void setDragPieceId(int dragPieceId) {
+        this.dragPieceId = dragPieceId;
+    }
+
+    public void setDragPieceOrientation(PieceOrientation dragPieceOrientation) {
+        this.dragPieceOrientation = dragPieceOrientation;
+    }
 
     public static void main(String[] args) {
         launch();
