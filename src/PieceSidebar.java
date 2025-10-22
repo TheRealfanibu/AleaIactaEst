@@ -4,14 +4,13 @@ import javafx.scene.canvas.Canvas;
 import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.image.ImageView;
 import javafx.scene.image.WritableImage;
-import javafx.scene.input.*;
+import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
 import javafx.scene.transform.Transform;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
 
@@ -84,7 +83,7 @@ public class PieceSidebar extends HBox {
 
             int offsetX = (int) (e.getX() * scaleWidth);
             int offsetY = (int) (e.getY() * scaleHeight);
-            mainFrame.addFloatingPieceView(pieceView, (int) e.getX(), (int) e.getY(), offsetX, offsetY);
+            mainFrame.addFloatingPieceView(pieceView, offsetX, offsetY);
 
             Piece piece = board.getPiecesOnBoard().get(0);
             mainFrame.setDragPieceId(piece.getId());

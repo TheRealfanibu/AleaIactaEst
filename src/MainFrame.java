@@ -1,4 +1,3 @@
-import com.sun.javafx.event.EventDispatchChainImpl;
 import javafx.application.Application;
 import javafx.application.Platform;
 import javafx.geometry.Bounds;
@@ -11,13 +10,18 @@ import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
-import javafx.scene.input.*;
-import javafx.scene.layout.*;
+import javafx.scene.input.MouseButton;
+import javafx.scene.input.MouseDragEvent;
+import javafx.scene.input.MouseEvent;
+import javafx.scene.layout.BorderPane;
+import javafx.scene.layout.HBox;
+import javafx.scene.layout.Pane;
+import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
 import javafx.scene.text.Font;
 import javafx.stage.Stage;
 
-import java.sql.Time;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
@@ -44,7 +48,7 @@ public class MainFrame extends Application {
     private Button firstSolutionButton, previusSolutionButton, nextSolutionButton, lastSolutionButton;
     private Label solutionLabel;
 
-    private List<Piece> fixedPiecesOnBoard;
+    private List<Piece> fixedPiecesOnBoard = new ArrayList<>();
 
     private boolean anySolutionFound = false;
     private int currentSolutionNumber;
@@ -58,16 +62,14 @@ public class MainFrame extends Application {
 
     private PieceOrientation dragPieceOrientation;
 
-    private Field fieldToBePlaced;
+    private Field dragFieldToBePlaced;
 
 
-    public void addFloatingPieceView(ImageView pieceView, int mouseX, int mouseY, int offsetX, int offsetY) {
+    public void addFloatingPieceView(ImageView pieceView, int offsetX, int offsetY) {
         floatingPieceView = pieceView;
         floatingPieceOffsetX = offsetX;
         floatingPieceOffsetY = offsetY;
 
-        floatingPieceView.setLayoutX(mouseX - offsetX);
-        floatingPieceView.setLayoutY(mouseY - offsetY);
         floatingPieceView.setVisible(false);
         rootPane.getChildren().add(floatingPieceView);
 
@@ -82,8 +84,7 @@ public class MainFrame extends Application {
     }
 
     private void initCanvas() {
-        drawBoard();
-        updatePieceSidebar();
+        updatePieces();
         canvas.setOnMouseClicked(this::canvasOnClicked);
     }
 
@@ -92,29 +93,48 @@ public class MainFrame extends Application {
         int canvasMouseX = (int) (event.getX() - canvasCoords.getMinX());
         int canvasMouseY = (int) (event.getY() - canvasCoords.getMinY());
         int rowToBePlaced = (int) Math.round((double) (canvasMouseY - floatingPieceOffsetY) / FIELD_SIZE);
-        int columnToBePlaced = (int) Math.round(( double)(canvasMouseX - floatingPieceOffsetX) / FIELD_SIZE);
+        int columnToBePlaced = (int) Math.round((double) (canvasMouseX - floatingPieceOffsetX) / FIELD_SIZE);
 
         if (board.fitsInPlace(dragPieceOrientation, rowToBePlaced, columnToBePlaced)) {
-            fieldToBePlaced = board.getFieldOnBoard(rowToBePlaced, columnToBePlaced);
-            int fieldSceneX = (int) (canvasCoords.getMinX() + fieldToBePlaced.getTopLeftCornerXCoordinate());
-            int fieldSceneY = (int) (canvasCoords.getMinY() + fieldToBePlaced.getTopLeftCornerYCoordinate());
+            dragFieldToBePlaced = board.getFieldOnBoard(rowToBePlaced, columnToBePlaced);
+            int fieldSceneX = (int) (canvasCoords.getMinX() + dragFieldToBePlaced.getTopLeftCornerXCoordinate());
+            int fieldSceneY = (int) (canvasCoords.getMinY() + dragFieldToBePlaced.getTopLeftCornerYCoordinate());
             floatingPieceView.relocate(fieldSceneX, fieldSceneY);
             return true;
         }
         return false;
     }
 
-    private void initFloatingPieceViewHandler() {
-        rootPane.setOnMouseDragOver(event -> {
-            if(!isPiecePlaceableOnCanvas(event)) {
-                int viewX = (int) (event.getX() - floatingPieceOffsetX);
-                int viewY = (int) (event.getY() - floatingPieceOffsetY);
-                floatingPieceView.relocate(viewX, viewY);
-            }
-            event.consume();
-        });
+    private void dragPiece(MouseDragEvent event) {
+        if (!isPiecePlaceableOnCanvas(event)) {
+            dragFieldToBePlaced = null;
+            int viewX = (int) (event.getX() - floatingPieceOffsetX);
+            int viewY = (int) (event.getY() - floatingPieceOffsetY);
+            floatingPieceView.relocate(viewX, viewY);
+        }
+        event.consume();
+    }
 
-        rootPane.setOnMouseDragReleased(event -> rootPane.getChildren().remove(floatingPieceView));
+    private void dragPieceRelease(MouseDragEvent event) {
+            if (dragFieldToBePlaced != null) {
+                Piece pieceToPlace = board.getAllPieces().get(dragPieceId);
+                board.placePieceOnBoard(pieceToPlace, dragPieceOrientation,
+                        dragFieldToBePlaced.getRow(), dragFieldToBePlaced.getColumn());
+                updatePieces();
+            }
+            rootPane.getChildren().remove(floatingPieceView);
+    }
+
+    private void initFloatingPieceViewHandler() {
+        rootPane.setOnMouseDragOver(this::dragPiece);
+
+        rootPane.setOnMouseDragReleased(this::dragPieceRelease);
+    }
+
+    private void updatePieces() {
+        updatePieceSidebar();
+        resetSolutionObjects();
+        drawBoard();
     }
 
     private void updatePieceSidebar() {
@@ -147,11 +167,12 @@ public class MainFrame extends Application {
                         anySolutionFound = true;
                         if (numberSolutionsFound > 0) {
                             currentSolutionNumber = 1;
+                            fixedPiecesOnBoard = board.getPiecesOnBoard();
                             updateSolution();
                         }
                     }
 
-                    Platform.runLater(this::updateSolutionObjects);
+                    updateSolutionObjects();
                 }
             }
         });
@@ -170,17 +191,14 @@ public class MainFrame extends Application {
     }
 
     private void resetBoard() {
-        resetSolutionObjects();
         board.reset();
-        updatePieceSidebar();
-        drawBoard();
+        fixedPiecesOnBoard.clear();
+        updatePieces();
     }
 
     private void solveBoard() {
         solveButton.setDisable(true);
         solveButton.setText("Solving...");
-
-        fixedPiecesOnBoard = board.getPiecesOnBoard();
 
         List<Integer> diceNumbers = Arrays.stream(dices).map(Dice::getNumber).toList();
         new Thread(() -> solver.solve(board.copy(), diceNumbers)).start();
@@ -228,10 +246,10 @@ public class MainFrame extends Application {
 
         Field clickedField = board.getFieldOnBoard(row, column);
         if (clickedField.isOccupied()) {
-            board.removePieceFromBoard(clickedField.getOccupationPiece());
-            updatePieceSidebar();
-            resetSolutionObjects();
-            drawBoard();
+            Piece occupationPiece = clickedField.getOccupationPiece();
+            fixedPiecesOnBoard.remove(occupationPiece);
+            board.removePieceFromBoard(occupationPiece);
+            updatePieces();
         }
     }
 
@@ -321,7 +339,6 @@ public class MainFrame extends Application {
 
     @Override
     public void start(Stage stage) {
-        initCanvas();
 
         BorderPane layout = new BorderPane();
 
@@ -332,6 +349,7 @@ public class MainFrame extends Application {
         middleBox.setAlignment(Pos.TOP_CENTER);
 
         Pane buttonBox = createButtonBox();
+        initCanvas();
 
         middleBox.getChildren().addAll(canvas, buttonBox);
 
@@ -356,9 +374,5 @@ public class MainFrame extends Application {
 
     public void setDragPieceOrientation(PieceOrientation dragPieceOrientation) {
         this.dragPieceOrientation = dragPieceOrientation;
-    }
-
-    public static void main(String[] args) {
-        launch();
     }
 }
