@@ -16,12 +16,11 @@ import java.util.List;
 
 public class PieceSidebar extends HBox {
 
-    private static final int FIELD_SIZE = 50;
+    private static final int FIELD_SIZE = 60;
 
-    private static final int SPACING = 10;
+    private static final int SPACING = 15;
 
-    private final List<Board> boards = new ArrayList<>();
-    private final List<Canvas> canvases = new ArrayList<>();
+    private final List<PieceCanvas> pieceCanvasList = new ArrayList<>();
 
     private final MainFrame mainFrame;
 
@@ -40,54 +39,29 @@ public class PieceSidebar extends HBox {
         for (Piece piece : allPieces) {
             PieceOrientation orientation = piece.getOrientations()[0];
 
-            Board board = new Board(FIELD_SIZE);
-            piece.setBoard(board);
-            board.placePieceOnBoard(piece, orientation, 0, 0);
-            boards.add(board);
+            PieceCanvas canvas = new PieceCanvas(piece, orientation, FIELD_SIZE);
 
-            Canvas canvas = new Canvas(orientation.getWidth() * FIELD_SIZE,
-                    orientation.getHeight() * FIELD_SIZE);
-
-            refreshCanvas(board, canvas);
             canvas.setOnDragDetected(this::onPieceDrag);
-            canvases.add(canvas);
+            pieceCanvasList.add(canvas);
         }
     }
 
-    private void refreshCanvas(Board board, Canvas canvas) {
-        Piece pieceOnCanvas = board.getPiecesOnBoard().get(0);
-        GraphicsContext graphics = canvas.getGraphicsContext2D();
-        graphics.clearRect(0, 0, canvas.getWidth(), canvas.getHeight());
-        pieceOnCanvas.drawPiece(graphics, List.of(), 2, 1, FIELD_SIZE, 5, 4);
-    }
 
     private void onPieceDrag(MouseEvent e) {
         int row = (int) (e.getY() / FIELD_SIZE);
         int column = (int) (e.getX() / FIELD_SIZE);
 
-        Canvas source = (Canvas) e.getSource();
-        Board board = boards.get(canvases.indexOf(source));
-
+        PieceCanvas source = (PieceCanvas) e.getSource();
+        Board board = source.getBoard();
         if (board.getFieldOnBoard(row, column).isOccupied()) {
 
             double scaleWidth = (double) MainFrame.FIELD_SIZE / FIELD_SIZE;
             double scaleHeight = (double) MainFrame.FIELD_SIZE / FIELD_SIZE;
 
-            WritableImage dragViewImage = new WritableImage((int) (source.getWidth() * scaleWidth),
-                    (int) (source.getHeight() * scaleHeight));
-            SnapshotParameters params = new SnapshotParameters();
-            params.setTransform(Transform.scale(scaleWidth, scaleHeight));
-            params.setFill(Color.TRANSPARENT);
-            ImageView pieceView = new ImageView(source.snapshot(params, dragViewImage));
-            pieceView.setOpacity(0.5);
-
             int offsetX = (int) (e.getX() * scaleWidth);
             int offsetY = (int) (e.getY() * scaleHeight);
-            mainFrame.addFloatingPieceView(pieceView, offsetX, offsetY);
 
-            Piece piece = board.getPiecesOnBoard().get(0);
-            mainFrame.setDragPieceId(piece.getId());
-            mainFrame.setDragPieceOrientation(piece.getOrientationOnBoard());
+            mainFrame.addFloatingPieceView(source.getPiece(), offsetX, offsetY);
 
             source.startFullDrag();
         }
@@ -97,10 +71,10 @@ public class PieceSidebar extends HBox {
 
 
     public void update(List<Piece> availablePieces) {
-        List<Canvas> sidebarCanvases = availablePieces.stream()
+        List<? extends Canvas> sidebarCanvases = availablePieces.stream()
                 .sorted(Comparator.comparingInt(Piece::getId))
                 .map(Piece::getId)
-                .map(canvases::get)
+                .map(pieceCanvasList::get)
                 .toList();
 
         int splittingThreshold = 4;
@@ -109,8 +83,8 @@ public class PieceSidebar extends HBox {
             vBox.getChildren().setAll(sidebarCanvases);
             getChildren().setAll(vBox);
         } else {
-            List<Canvas> leftCanvases = sidebarCanvases.stream().limit(splittingThreshold).toList();
-            List<Canvas> rightCanvases = sidebarCanvases.stream().skip(splittingThreshold).toList();
+            List<? extends Canvas> leftCanvases = sidebarCanvases.stream().limit(splittingThreshold).toList();
+            List<? extends Canvas> rightCanvases = sidebarCanvases.stream().skip(splittingThreshold).toList();
 
             VBox leftVBox = new VBox(SPACING);
             leftVBox.getChildren().setAll(leftCanvases);

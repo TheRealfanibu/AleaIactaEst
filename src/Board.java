@@ -22,12 +22,9 @@ public class Board {
     private final List<Piece> allPieces = PieceCollection.createPieceInstances();
     private final List<Piece> piecesOnBoard = new LinkedList<>();
 
-    private final int fieldSize;
-
-    public Board(int fieldSize) {
+    public Board() {
         boardFields = new Field[7][7];
         allFields = new LinkedList<>();
-        this.fieldSize = fieldSize;
 
         initField();
 
@@ -85,7 +82,7 @@ public class Board {
     private void initField() {
         for (int i = 0; i < 7; i++) {
             for (int j = 0; j < 7; j++) {
-                Field field = new Field(i, j, NUMBERS[i][j], fieldSize);
+                Field field = new Field(i, j, NUMBERS[i][j]);
                 boardFields[i][j] = field;
                 allFields.add(field);
             }
@@ -120,7 +117,7 @@ public class Board {
     }
 
     public Board copy() {
-        Board copyBoard = new Board(fieldSize);
+        Board copyBoard = new Board();
         for (Piece piece : piecesOnBoard) {
             Piece copyPiece = copyBoard.allPieces.get(piece.getId());
             copyBoard.placePieceOnBoard(copyPiece, piece.getOrientationOnBoard(),

@@ -1,3 +1,4 @@
+import com.sun.tools.javac.Main;
 import javafx.application.Application;
 import javafx.application.Platform;
 import javafx.geometry.Bounds;
@@ -21,10 +22,9 @@ import javafx.scene.paint.Color;
 import javafx.scene.text.Font;
 import javafx.stage.Stage;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Objects;
+import java.util.*;
+import java.util.function.IntFunction;
+import java.util.function.ToIntFunction;
 
 public class MainFrame extends Application {
 
@@ -38,7 +38,7 @@ public class MainFrame extends Application {
     private final GraphicsContext graphics = canvas.getGraphicsContext2D();
 
     private final Dice[] dices = new Dice[6];
-    private Board board = new Board(FIELD_SIZE);
+    private Board board = new Board();
 
     private final PieceSidebar pieceSidebar = new PieceSidebar(this);
 
@@ -54,7 +54,7 @@ public class MainFrame extends Application {
     private int currentSolutionNumber;
     private int numberSolutionsFound;
 
-    private ImageView floatingPieceView = null;
+    private Canvas floatingPieceCanvas = null;
     private int floatingPieceOffsetX;
     private int floatingPieceOffsetY;
 
@@ -65,41 +65,67 @@ public class MainFrame extends Application {
     private Field dragFieldToBePlaced;
 
 
-    public void addFloatingPieceView(ImageView pieceView, int offsetX, int offsetY) {
-        floatingPieceView = pieceView;
+    private void startPieceDragOnBoard(MouseEvent mouseEvent) {
+        int row = (int) (mouseEvent.getY() / FIELD_SIZE);
+        int column =  (int) (mouseEvent.getX() / FIELD_SIZE);
+        System.out.println(row + " " + column);
+
+        Field draggedField = board.getFieldOnBoard(row, column);
+        if(draggedField.isOccupied()) {
+            Piece draggedPiece = draggedField.getOccupationPiece();
+
+            int minPieceRow = getMinAttributeField(draggedPiece.getOccupiedFields(), Field::getRow);
+            int minPieceColumn = getMinAttributeField(draggedPiece.getOccupiedFields(), Field::getColumn);
+            Field minField = board.getFieldOnBoard(minPieceRow, minPieceColumn);
+            int offsetX = (int) (mouseEvent.getX() - minField.getTopLeftCornerXCoordinate());
+            int offsetY = (int) (mouseEvent.getY() - minField.getTopLeftCornerYCoordinate());
+
+            board.removePieceFromBoard(draggedPiece);
+            addFloatingPieceView(draggedPiece, offsetX, offsetY);
+            drawBoard();
+            canvas.startFullDrag();
+        }
+    }
+
+    private int getMinAttributeField(List<Field> fields, ToIntFunction<Field> attributeFunc) {
+        return fields.stream().mapToInt(attributeFunc).min().orElseThrow();
+    }
+
+    public void addFloatingPieceView(Piece piece, int offsetX, int offsetY) {
+        floatingPieceCanvas = new PieceCanvas(piece, piece.getOrientationOnBoard(), FIELD_SIZE);
+        floatingPieceCanvas.setOpacity(0.7);
+
         floatingPieceOffsetX = offsetX;
         floatingPieceOffsetY = offsetY;
 
-        floatingPieceView.setVisible(false);
-        rootPane.getChildren().add(floatingPieceView);
+        dragPieceId = piece.getId();
+        dragPieceOrientation = piece.getOrientationOnBoard();
 
-        Platform.runLater(() -> {
+        floatingPieceCanvas.setVisible(false);
+        rootPane.getChildren().add(floatingPieceCanvas);
+
+        Platform.runLater(() -> { // to avoid the piece popping up in the top left corner
             try {
-                Thread.sleep(50);
+                Thread.sleep(100);
             } catch (InterruptedException e) {
                 throw new RuntimeException(e);
             }
-            floatingPieceView.setVisible(true);
+            floatingPieceCanvas.setVisible(true);
         });
-    }
-
-    private void initCanvas() {
-        updatePieces();
-        canvas.setOnMouseClicked(this::canvasOnClicked);
     }
 
     private boolean isPiecePlaceableOnCanvas(MouseDragEvent event) {
         Bounds canvasCoords = canvas.localToScene(canvas.getBoundsInLocal());
-        int canvasMouseX = (int) (event.getX() - canvasCoords.getMinX());
-        int canvasMouseY = (int) (event.getY() - canvasCoords.getMinY());
-        int rowToBePlaced = (int) Math.round((double) (canvasMouseY - floatingPieceOffsetY) / FIELD_SIZE);
-        int columnToBePlaced = (int) Math.round((double) (canvasMouseX - floatingPieceOffsetX) / FIELD_SIZE);
+        double canvasMouseX = event.getX() - canvasCoords.getMinX();
+        double canvasMouseY = event.getY() - canvasCoords.getMinY();
+        int rowToBePlaced = (int) Math.round((canvasMouseY - floatingPieceOffsetY) / FIELD_SIZE);
+        int columnToBePlaced = (int) Math.round((canvasMouseX - floatingPieceOffsetX) / FIELD_SIZE);
 
         if (board.fitsInPlace(dragPieceOrientation, rowToBePlaced, columnToBePlaced)) {
             dragFieldToBePlaced = board.getFieldOnBoard(rowToBePlaced, columnToBePlaced);
             int fieldSceneX = (int) (canvasCoords.getMinX() + dragFieldToBePlaced.getTopLeftCornerXCoordinate());
             int fieldSceneY = (int) (canvasCoords.getMinY() + dragFieldToBePlaced.getTopLeftCornerYCoordinate());
-            floatingPieceView.relocate(fieldSceneX, fieldSceneY);
+            floatingPieceCanvas.relocate(fieldSceneX, fieldSceneY);
             return true;
         }
         return false;
@@ -110,25 +136,27 @@ public class MainFrame extends Application {
             dragFieldToBePlaced = null;
             int viewX = (int) (event.getX() - floatingPieceOffsetX);
             int viewY = (int) (event.getY() - floatingPieceOffsetY);
-            floatingPieceView.relocate(viewX, viewY);
+            floatingPieceCanvas.relocate(viewX, viewY);
         }
         event.consume();
     }
 
     private void dragPieceRelease(MouseDragEvent event) {
-            if (dragFieldToBePlaced != null) {
-                Piece pieceToPlace = board.getAllPieces().get(dragPieceId);
-                board.placePieceOnBoard(pieceToPlace, dragPieceOrientation,
-                        dragFieldToBePlaced.getRow(), dragFieldToBePlaced.getColumn());
-                updatePieces();
-            }
-            rootPane.getChildren().remove(floatingPieceView);
+        if (dragFieldToBePlaced != null) {
+            Piece pieceToPlace = board.getAllPieces().get(dragPieceId);
+            board.placePieceOnBoard(pieceToPlace, dragPieceOrientation,
+                    dragFieldToBePlaced.getRow(), dragFieldToBePlaced.getColumn());
+            updatePieces();
+        }
+        rootPane.getChildren().remove(floatingPieceCanvas);
+        event.consume();
     }
 
     private void initFloatingPieceViewHandler() {
         rootPane.setOnMouseDragOver(this::dragPiece);
 
         rootPane.setOnMouseDragReleased(this::dragPieceRelease);
+
     }
 
     private void updatePieces() {
@@ -154,7 +182,6 @@ public class MainFrame extends Application {
             String solveButtonText = numberSolutionsFound == 0 ? "No solution found." : "Solved.";
             Platform.runLater(() -> solveButton.setText(solveButtonText));
         }
-
     }
 
     public void updateSolutionStats() {
@@ -254,8 +281,7 @@ public class MainFrame extends Application {
     }
 
     private void drawPiecesAndNumbers() {
-        board.getPiecesOnBoard().forEach(piece -> piece.drawPiece(graphics, fixedPiecesOnBoard,
-                3, 2, FIELD_SIZE, 8, 6));
+        board.getPiecesOnBoard().forEach(piece -> piece.drawPiece(graphics, fixedPiecesOnBoard, FIELD_SIZE));
         board.getAllFields().stream()
                 .filter(field -> !field.isOccupied())
                 .forEach(this::drawField);
@@ -335,6 +361,12 @@ public class MainFrame extends Application {
             updateSolution();
         });
         return solutionButton;
+    }
+
+    private void initCanvas() {
+        updatePieces();
+        canvas.setOnMouseClicked(this::canvasOnClicked);
+        canvas.setOnDragDetected(this::startPieceDragOnBoard);
     }
 
     @Override

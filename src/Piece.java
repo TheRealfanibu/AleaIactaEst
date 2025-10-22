@@ -1,10 +1,17 @@
 import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.paint.Color;
+import javafx.scene.transform.Transform;
 
 import java.util.List;
 import java.util.Objects;
 
 public class Piece {
+
+    private static final int OUTER_STROKE = 3;
+    private static final int INNER_STROKE = 2;
+
+    private static final int OUTER_MARGIN = 8;
+    private static final int INNER_MARGIN = 6;
 
     private final int amountOccupations;
     private final PieceOrientation[] orientations;
@@ -26,36 +33,40 @@ public class Piece {
         this.id = id;
     }
 
-    public void drawPiece(GraphicsContext graphics, List<Piece> fixedPiecesOnBoard, int outerStroke, int innerStroke,
-                          int fieldSize, int outerMargin, int innerMargin) {
+    public void drawPiece(GraphicsContext graphics, List<Piece> fixedPiecesOnBoard,
+                          int fieldSize) {
+        graphics.save();
+        graphics.scale((double) fieldSize / MainFrame.FIELD_SIZE, (double) fieldSize / MainFrame.FIELD_SIZE);
+
         Color fillColor = fixedPiecesOnBoard.contains(this) ? Color.SANDYBROWN : Color.SADDLEBROWN;
         graphics.setFill(fillColor);
 
-        graphics.setLineWidth(outerStroke);
-        createPieceShape(graphics, fieldSize, outerMargin);
+        graphics.setLineWidth(OUTER_STROKE);
+        createPieceShape(graphics, OUTER_MARGIN);
         graphics.fill();
         graphics.stroke();
 
-        graphics.setLineWidth(innerStroke);
+        graphics.setLineWidth(INNER_STROKE);
         for (int i = 0; i < 2; i++) {
-            createPieceShape(graphics, fieldSize, outerMargin + (i + 1) * innerMargin);
+            createPieceShape(graphics, OUTER_MARGIN + (i + 1) * INNER_MARGIN);
             graphics.stroke();
         }
+        graphics.restore();
     }
 
-    private void createPieceShape(GraphicsContext graphics, int fieldSize, int margin) {
+    private void createPieceShape(GraphicsContext graphics, int margin) {
         PiecePosition startPosition = getStartPiecePosition();
 
         Field currentField = startPosition.field();
         Direction currentDirection = startPosition.direction();
-        currentDrawX = getStartX(currentField, currentDirection, fieldSize, margin);
-        currentDrawY = getStartY(currentField, currentDirection, fieldSize, margin);
+        currentDrawX = getStartX(currentField, currentDirection, margin);
+        currentDrawY = getStartY(currentField, currentDirection, margin);
 
         graphics.beginPath();
         graphics.moveTo(currentDrawX, currentDrawY);
         do {
-            currentDrawX = getEndX(currentField, currentDirection, fieldSize, margin); // big line
-            currentDrawY = getEndY(currentField, currentDirection, fieldSize, margin);
+            currentDrawX = getEndX(currentField, currentDirection, margin); // big line
+            currentDrawY = getEndY(currentField, currentDirection, margin);
             graphics.lineTo(currentDrawX, currentDrawY);
 
             Direction adjacentDirection = currentDirection.next();
@@ -130,28 +141,28 @@ public class Piece {
     }
 
 
-    private int getStartX(Field field, Direction direction, int fieldSize, int gap) {
+    private int getStartX(Field field, Direction direction, int gap) {
         return direction == Direction.UP || direction == Direction.LEFT ?
                 field.getTopLeftCornerXCoordinate() + gap :
-                field.getTopLeftCornerXCoordinate() + fieldSize - gap;
+                field.getTopLeftCornerXCoordinate() + MainFrame.FIELD_SIZE - gap;
     }
 
-    private int getEndX(Field field, Direction direction, int fieldSize, int gap) {
+    private int getEndX(Field field, Direction direction, int gap) {
         return direction == Direction.DOWN || direction == Direction.LEFT ?
                 field.getTopLeftCornerXCoordinate() + gap :
-                field.getTopLeftCornerXCoordinate() + fieldSize - gap;
+                field.getTopLeftCornerXCoordinate() + MainFrame.FIELD_SIZE - gap;
     }
 
-    private int getStartY(Field field, Direction direction, int fieldSize, int gap) {
+    private int getStartY(Field field, Direction direction, int gap) {
         return direction == Direction.UP || direction == Direction.RIGHT ?
                 field.getTopLeftCornerYCoordinate() + gap :
-                field.getTopLeftCornerYCoordinate() + fieldSize - gap;
+                field.getTopLeftCornerYCoordinate() + MainFrame.FIELD_SIZE - gap;
     }
 
-    private int getEndY(Field field, Direction direction, int fieldSize, int gap) {
+    private int getEndY(Field field, Direction direction, int gap) {
         return direction == Direction.LEFT || direction == Direction.UP ?
                 field.getTopLeftCornerYCoordinate() + gap :
-                field.getTopLeftCornerYCoordinate() + fieldSize - gap;
+                field.getTopLeftCornerYCoordinate() + MainFrame.FIELD_SIZE - gap;
     }
 
     private boolean isDiagonalFieldPartOfPiece(Field field, Direction baseDirection, Direction adjacentDirection) {
