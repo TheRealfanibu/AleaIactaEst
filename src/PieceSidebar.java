@@ -2,7 +2,8 @@ import javafx.geometry.Pos;
 import javafx.scene.SnapshotParameters;
 import javafx.scene.canvas.Canvas;
 import javafx.scene.canvas.GraphicsContext;
-import javafx.scene.image.Image;
+import javafx.scene.image.ImageView;
+import javafx.scene.image.WritableImage;
 import javafx.scene.input.ClipboardContent;
 import javafx.scene.input.Dragboard;
 import javafx.scene.input.MouseEvent;
@@ -10,6 +11,7 @@ import javafx.scene.input.TransferMode;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
+import javafx.scene.transform.Transform;
 
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -24,7 +26,11 @@ public class PieceSidebar extends HBox {
     private final List<Board> boards = new ArrayList<>();
     private final List<Canvas> canvases = new ArrayList<>();
 
-    public PieceSidebar() {
+    private final MainFrame mainFrame;
+
+    public PieceSidebar(MainFrame mainFrame) {
+        this.mainFrame = mainFrame;
+
         setAlignment(Pos.TOP_LEFT);
         setSpacing(SPACING);
 
@@ -55,7 +61,7 @@ public class PieceSidebar extends HBox {
         Piece pieceOnCanvas = board.getPiecesOnBoard().get(0);
         GraphicsContext graphics = canvas.getGraphicsContext2D();
         graphics.clearRect(0, 0, canvas.getWidth(), canvas.getHeight());
-        pieceOnCanvas.drawPiece(graphics, List.of(), 2, 1, FIELD_SIZE, 3, 4);
+        pieceOnCanvas.drawPiece(graphics, List.of(), 2, 1, FIELD_SIZE, 5, 4);
     }
 
     private void onPieceDrag(MouseEvent e) {
@@ -66,17 +72,28 @@ public class PieceSidebar extends HBox {
         Board board = boards.get(canvases.indexOf(source));
 
         if (board.getFieldOnBoard(row, column).isOccupied()) {
-            Dragboard dragboard = source.startDragAndDrop(TransferMode.MOVE);
+            double scaleWidth = (double) MainFrame.FIELD_SIZE / FIELD_SIZE;
+            double scaleHeight = (double) MainFrame.FIELD_SIZE / FIELD_SIZE;
+
+            WritableImage dragViewImage = new WritableImage((int) (source.getWidth() * scaleWidth),
+                    (int) (source.getHeight() * scaleHeight));
+            SnapshotParameters params = new SnapshotParameters();
+            params.setTransform(Transform.scale(scaleWidth, scaleHeight));
+            params.setFill(Color.TRANSPARENT);
+            ImageView pieceView = new ImageView(source.snapshot(params, dragViewImage));
+            pieceView.setOpacity(0.5);
+
+            int offsetX = (int) (e.getX() * scaleWidth);
+            int offsetY = (int) (e.getY() * scaleHeight);
+            mainFrame.addFloatingPieceView(pieceView, offsetX, offsetY);
+
+            Dragboard dragboard = pieceView.startDragAndDrop(TransferMode.MOVE);
 
             ClipboardContent content = new ClipboardContent();
-            int pieceId = board.getPiecesOnBoard().get(0).getId();
-            content.putString(String.valueOf(pieceId));
+            Piece piece = board.getPiecesOnBoard().get(0);
+            content.putString(String.valueOf(piece.getId()));
 
             dragboard.setContent(content);
-
-            SnapshotParameters params = new SnapshotParameters();
-            params.setFill(Color.TRANSPARENT);
-            dragboard.setDragView(source.snapshot(params, null), e.getX(), e.getY());
         }
 
         e.consume();

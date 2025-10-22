@@ -11,10 +11,8 @@ import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.input.MouseButton;
 import javafx.scene.input.MouseEvent;
-import javafx.scene.layout.BorderPane;
-import javafx.scene.layout.HBox;
-import javafx.scene.layout.Pane;
-import javafx.scene.layout.VBox;
+import javafx.scene.input.TransferMode;
+import javafx.scene.layout.*;
 import javafx.scene.paint.Color;
 import javafx.scene.text.Font;
 import javafx.stage.Stage;
@@ -29,13 +27,15 @@ public class MainFrame extends Application {
 
     private static final int CANVAS_SIZE = 7 * FIELD_SIZE;
 
+    private Pane rootPane;
+
     private final Canvas canvas = new Canvas(CANVAS_SIZE, CANVAS_SIZE);
     private final GraphicsContext graphics = canvas.getGraphicsContext2D();
 
     private final Dice[] dices = new Dice[6];
     private Board board = new Board(FIELD_SIZE);
 
-    private final PieceSidebar pieceSidebar = new PieceSidebar();
+    private final PieceSidebar pieceSidebar = new PieceSidebar(this);
 
     private final Solver solver = new Solver(this);
 
@@ -43,14 +43,36 @@ public class MainFrame extends Application {
     private Button firstSolutionButton, previusSolutionButton, nextSolutionButton, lastSolutionButton;
     private Label solutionLabel;
 
-
-
     private List<Piece> fixedPiecesOnBoard;
 
     private boolean anySolutionFound = false;
     private int currentSolutionNumber;
     private int numberSolutionsFound;
 
+    private ImageView floatingPieceView = null;
+    private int floatingPieceOffsetX;
+    private int floatingPieceOffsetY;
+
+    public void addFloatingPieceView(ImageView pieceView, int offsetX, int offsetY) {
+        floatingPieceView = pieceView;
+        floatingPieceOffsetX = offsetX;
+        floatingPieceOffsetY = offsetY;
+        rootPane.getChildren().add(pieceView);
+    }
+
+    private void initFloatingPieceViewHandler() {
+        rootPane.setOnDragOver(event -> {
+            int viewX = (int) (event.getX() - floatingPieceOffsetX);
+            int viewY = (int) (event.getY() - floatingPieceOffsetY);
+            floatingPieceView.relocate(viewX, viewY);
+        });
+
+
+        rootPane.setOnDragExited(event -> {
+            rootPane.getChildren().remove(floatingPieceView);
+            floatingPieceView = null;
+        });
+    }
 
     private void updatePieceSidebar() {
         pieceSidebar.update(board.getAvailablePieces());
@@ -134,7 +156,6 @@ public class MainFrame extends Application {
     }
 
 
-
     private void initCanvas() {
         drawBoard();
         updatePieceSidebar();
@@ -193,31 +214,6 @@ public class MainFrame extends Application {
         int yOffset = field.getTopLeftCornerYCoordinate();
 
         Dice.drawNumber(graphics, field.getNumber(), xOffset, yOffset);
-    }
-
-    @Override
-    public void start(Stage stage) {
-        initCanvas();
-
-        BorderPane layout = new BorderPane();
-
-        HBox centerBox = new HBox(30);
-        centerBox.setAlignment(Pos.TOP_LEFT);
-
-        VBox middleBox = new VBox(20);
-        middleBox.setAlignment(Pos.TOP_CENTER);
-
-        Pane buttonBox = createButtonBox();
-
-        middleBox.getChildren().addAll(canvas, buttonBox);
-
-        centerBox.getChildren().addAll(createDicePane(), middleBox, pieceSidebar);
-        layout.setCenter(centerBox);
-
-        layout.setPadding(new Insets(30));
-
-        stage.setScene(new Scene(layout));
-        stage.show();
     }
 
     private Pane createDicePane() {
@@ -279,11 +275,41 @@ public class MainFrame extends Application {
         solutionButton.setGraphic(imageView);
 
         solutionButton.setDisable(true);
-        solutionButton.onActionProperty().set(e ->  {
+        solutionButton.onActionProperty().set(e -> {
             action.run();
             updateSolution();
         });
         return solutionButton;
+    }
+
+    @Override
+    public void start(Stage stage) {
+        initCanvas();
+
+        BorderPane layout = new BorderPane();
+
+        HBox centerBox = new HBox(30);
+        centerBox.setAlignment(Pos.TOP_LEFT);
+
+        VBox middleBox = new VBox(20);
+        middleBox.setAlignment(Pos.TOP_CENTER);
+
+        Pane buttonBox = createButtonBox();
+
+        middleBox.getChildren().addAll(canvas, buttonBox);
+
+        centerBox.getChildren().addAll(createDicePane(), middleBox, pieceSidebar);
+        layout.setCenter(centerBox);
+
+        layout.setPadding(new Insets(30));
+
+        rootPane = new Pane(layout);
+        initFloatingPieceViewHandler();
+
+        Scene scene = new Scene(rootPane);
+
+        stage.setScene(scene);
+        stage.show();
     }
 
 
