@@ -36,11 +36,7 @@ public class Piece {
         return new Piece(amountOccupations, orientations, id);
     }
 
-    public void drawPiece(GraphicsContext graphics, List<Piece> fixedPiecesOnBoard,
-                          int fieldSize) {
-        graphics.save();
-        graphics.scale((double) fieldSize / MainFrame.FIELD_SIZE, (double) fieldSize / MainFrame.FIELD_SIZE);
-
+    public void drawPiece(GraphicsContext graphics, List<Piece> fixedPiecesOnBoard) {
         Color fillColor = fixedPiecesOnBoard.contains(this) ? Color.SANDYBROWN : Color.SADDLEBROWN;
         graphics.setFill(fillColor);
 
@@ -54,7 +50,6 @@ public class Piece {
             createPieceShape(graphics, OUTER_MARGIN + (i + 1) * INNER_MARGIN);
             graphics.stroke();
         }
-        graphics.restore();
     }
 
     private void createPieceShape(GraphicsContext graphics, int margin) {

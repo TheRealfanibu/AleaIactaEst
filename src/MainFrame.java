@@ -94,7 +94,7 @@ public class MainFrame extends Application {
     }
 
     public void addFloatingPieceView(Piece piece, int offsetX, int offsetY) {
-        floatingPieceCanvas = new PieceCanvas(piece, piece.getOrientationOnBoard(), FIELD_SIZE);
+        floatingPieceCanvas = new PieceCanvas(piece, piece.getOrientationOnBoard(), FIELD_SIZE, false);
         floatingPieceCanvas.setOpacity(0.7);
 
         floatingPieceOffsetX = offsetX;
@@ -284,7 +284,7 @@ public class MainFrame extends Application {
     }
 
     private void drawPiecesAndNumbers() {
-        board.getPiecesOnBoard().forEach(piece -> piece.drawPiece(graphics, fixedPiecesOnBoard, FIELD_SIZE));
+        board.getPiecesOnBoard().forEach(piece -> piece.drawPiece(graphics, fixedPiecesOnBoard));
         board.getAllFields().stream()
                 .filter(field -> !field.isOccupied())
                 .forEach(this::drawField);

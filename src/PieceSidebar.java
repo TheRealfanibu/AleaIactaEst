@@ -32,7 +32,7 @@ public class PieceSidebar extends HBox {
 
         for (Piece piece : allPieces) {
             PieceOrientation orientation = piece.getOrientations()[0];
-            PieceCanvas canvas = new PieceCanvas(piece, orientation, FIELD_SIZE);
+            PieceCanvas canvas = new PieceCanvas(piece, orientation, FIELD_SIZE, true);
 
             canvas.setOnDragDetected(this::onPieceDrag);
             pieceCanvasList.add(canvas);
@@ -70,22 +70,18 @@ public class PieceSidebar extends HBox {
                 .map(pieceCanvasList::get)
                 .toList();
 
-        int splittingThreshold = 4;
-        if (availablePieces.size() <= splittingThreshold) {
-            VBox vBox = new VBox(SPACING);
-            vBox.getChildren().setAll(sidebarCanvases);
-            getChildren().setAll(vBox);
-        } else {
-            List<? extends Canvas> leftCanvases = sidebarCanvases.stream().limit(splittingThreshold).toList();
-            List<? extends Canvas> rightCanvases = sidebarCanvases.stream().skip(splittingThreshold).toList();
+        int splittingThreshold = 3;
+        int columns = (availablePieces.size() - 1) / splittingThreshold + 1;
 
-            VBox leftVBox = new VBox(SPACING);
-            leftVBox.getChildren().setAll(leftCanvases);
-            VBox rightVBox = new VBox(SPACING);
-            rightVBox.getChildren().setAll(rightCanvases);
-
-            getChildren().setAll(leftVBox, rightVBox);
+        getChildren().clear();
+        for (long i = 0; i < columns; i++) {
+            VBox column = new VBox(SPACING);
+            List<? extends Canvas> canvases = sidebarCanvases.stream()
+                    .skip(i * splittingThreshold)
+                    .limit(splittingThreshold)
+                    .toList();
+            column.getChildren().setAll(canvases);
+            getChildren().add(column);
         }
-
     }
 }
