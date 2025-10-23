@@ -1,10 +1,14 @@
+import javafx.geometry.Point2D;
 import javafx.geometry.Pos;
 import javafx.scene.canvas.Canvas;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
+import javafx.scene.transform.Rotate;
+import javafx.scene.transform.Transform;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
 
@@ -44,19 +48,37 @@ public class PieceSidebar extends HBox {
         int row = (int) (e.getY() / FIELD_SIZE);
         int column = (int) (e.getX() / FIELD_SIZE);
 
-        PieceCanvas source = (PieceCanvas) e.getSource();
-        Board board = source.getBoard();
+        PieceCanvas pieceCanvas = (PieceCanvas) e.getSource();
+        Board board = pieceCanvas.getBoard();
         if (board.getFieldOnBoard(row, column).isOccupied()) {
+            Transform mouseCoordsRotate = new Rotate(pieceCanvas.getRotationAngle(),
+                    pieceCanvas.getWidth() / 2, pieceCanvas.getHeight() / 2);
+            Point2D absoluteMouseCoords = mouseCoordsRotate.transform(e.getX(), e.getY());
 
-            double scaleWidth = (double) MainFrame.FIELD_SIZE / FIELD_SIZE;
-            double scaleHeight = (double) MainFrame.FIELD_SIZE / FIELD_SIZE;
+            PieceOrientation originalOrientation = pieceCanvas.getOriginalPieceOrientation();
+            double centerField = (Math.max(originalOrientation.getWidth(), originalOrientation.getHeight()) - 1) / 2d;
+            Transform fieldsRotate = new Rotate(pieceCanvas.getRotationAngle(), centerField, centerField);
 
-            int offsetX = (int) (e.getX() * scaleWidth);
-            int offsetY = (int) (e.getY() * scaleHeight);
+            List<Point2D> transformedFields = Arrays.stream(originalOrientation.getPositions())
+                    .map(pos -> fieldsRotate.transform(
+                            pos.column() + pieceCanvas.getPieceColumnOffset(),
+                            pos.row() + pieceCanvas.getPieceRowOffset()))
+                    .toList();
 
-            mainFrame.addFloatingPieceView(source.getPiece(), offsetX, offsetY);
+            double minPieceColumn = transformedFields.stream().mapToDouble(Point2D::getX).min().orElseThrow();
+            double minPieceRow = transformedFields.stream().mapToDouble(Point2D::getY).min().orElseThrow();
 
-            source.startFullDrag();
+            double minPieceX = minPieceColumn * FIELD_SIZE;
+            double minPieceY = minPieceRow * FIELD_SIZE;
+
+            double scale = (double) MainFrame.FIELD_SIZE / FIELD_SIZE;
+
+            int offsetX = (int) ((absoluteMouseCoords.getX() - minPieceX) * scale);
+            int offsetY = (int) ((absoluteMouseCoords.getY() - minPieceY) * scale);
+
+            mainFrame.addFloatingPieceView(pieceCanvas.getPiece(), offsetX, offsetY);
+
+            pieceCanvas.startFullDrag();
         }
 
         e.consume();

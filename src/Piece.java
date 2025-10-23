@@ -1,6 +1,7 @@
 import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.paint.Color;
 
+import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
 
@@ -224,6 +225,10 @@ public class Piece {
 
     public void setColumnOffsetOnBoard(int columnOffsetOnBoard) {
         this.columnOffsetOnBoard = columnOffsetOnBoard;
+    }
+
+    public int getOrientationIndex() {
+        return Arrays.asList(orientations).indexOf(orientationOnBoard);
     }
 
     private enum Direction {
