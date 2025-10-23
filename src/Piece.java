@@ -32,6 +32,10 @@ public class Piece {
         this.id = id;
     }
 
+    public Piece copy() {
+        return new Piece(amountOccupations, orientations, id);
+    }
+
     public void drawPiece(GraphicsContext graphics, List<Piece> fixedPiecesOnBoard,
                           int fieldSize) {
         graphics.save();
@@ -263,4 +267,5 @@ public class Piece {
     public int hashCode() {
         return Objects.hash(id);
     }
+
 }

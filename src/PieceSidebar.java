@@ -32,7 +32,6 @@ public class PieceSidebar extends HBox {
 
         for (Piece piece : allPieces) {
             PieceOrientation orientation = piece.getOrientations()[0];
-
             PieceCanvas canvas = new PieceCanvas(piece, orientation, FIELD_SIZE);
 
             canvas.setOnDragDetected(this::onPieceDrag);

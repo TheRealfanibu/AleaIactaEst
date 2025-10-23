@@ -11,11 +11,11 @@ public class PieceCanvas extends Canvas {
 
     private final Board board;
 
-    public PieceCanvas(Piece piece, PieceOrientation orientation, int fieldSize) {
+    public PieceCanvas(Piece pieceToCopy, PieceOrientation orientation, int fieldSize) {
         super(orientation.getWidth() * fieldSize, orientation.getHeight() * fieldSize);
 
         this.fieldSize = fieldSize;
-        this.piece = piece;
+        this.piece = pieceToCopy.copy();
 
         board = new Board();
         piece.setBoard(board);

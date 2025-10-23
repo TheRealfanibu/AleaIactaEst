@@ -82,6 +82,7 @@ public class MainFrame extends Application {
             int offsetY = (int) (mouseEvent.getY() - minField.getTopLeftCornerYCoordinate());
 
             board.removePieceFromBoard(draggedPiece);
+            fixedPiecesOnBoard.remove(draggedPiece);
             addFloatingPieceView(draggedPiece, offsetX, offsetY);
             drawBoard();
             canvas.startFullDrag();
@@ -149,6 +150,7 @@ public class MainFrame extends Application {
                     dragFieldToBePlaced.getRow(), dragFieldToBePlaced.getColumn());
             updatePieces();
         }
+        updatePieceSidebar();
         rootPane.getChildren().remove(floatingPieceCanvas);
         event.consume();
     }
