@@ -7,7 +7,9 @@ import javafx.scene.Scene;
 import javafx.scene.canvas.Canvas;
 import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.control.Button;
+import javafx.scene.control.CheckBox;
 import javafx.scene.control.Label;
+import javafx.scene.control.ToggleButton;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.input.MouseButton;
@@ -50,6 +52,9 @@ public class MainFrame extends Application {
     private Label solutionLabel;
 
     private List<Piece> fixedPiecesOnBoard = new ArrayList<>();
+
+    private boolean showSolution = true;
+    private Board withoutSolutionBoard;
 
     private boolean anySolutionFound = false;
     private int currentSolutionNumber;
@@ -173,10 +178,12 @@ public class MainFrame extends Application {
     }
 
     private void updateSolution() {
-        board = solver.getSolutions().get(currentSolutionNumber - 1);
-        updatePieceSidebar();
-        drawBoard();
-        updateSolutionObjects();
+        if (anySolutionFound) {
+            board = showSolution ? solver.getSolutions().get(currentSolutionNumber - 1) : withoutSolutionBoard;
+            updatePieceSidebar();
+            drawBoard();
+            updateSolutionObjects();
+        }
     }
 
     public void indicateSolvingFinished() {
@@ -227,6 +234,8 @@ public class MainFrame extends Application {
     }
 
     private void solveBoard() {
+        withoutSolutionBoard = board.copy();
+
         solveButton.setDisable(true);
         solveButton.setText("Solving...");
 
@@ -313,7 +322,16 @@ public class MainFrame extends Application {
 
     private Pane createButtonBox() {
 
+
+
         Font buttonFont = Font.font(20);
+        CheckBox showSolutionBox = new CheckBox("Show Solution");
+        showSolutionBox.setFont(buttonFont);
+        showSolutionBox.setSelected(showSolution);
+        showSolutionBox.setOnAction(event -> {
+            showSolution = showSolutionBox.isSelected();
+            updateSolution();
+        });
 
         solveButton = new Button("Solve");
         solveButton.setFont(buttonFont);
@@ -325,7 +343,7 @@ public class MainFrame extends Application {
 
         HBox upperBox = new HBox(10);
         upperBox.setAlignment(Pos.CENTER);
-        upperBox.getChildren().addAll(solveButton, resetButton);
+        upperBox.getChildren().addAll(showSolutionBox, solveButton, resetButton);
 
         HBox solutionBox = new HBox(10);
         solutionBox.setAlignment(Pos.CENTER);
