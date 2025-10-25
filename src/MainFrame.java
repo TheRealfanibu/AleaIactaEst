@@ -9,7 +9,6 @@ import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.control.Button;
 import javafx.scene.control.CheckBox;
 import javafx.scene.control.Label;
-import javafx.scene.control.ToggleButton;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.input.MouseButton;
@@ -240,7 +239,7 @@ public class MainFrame extends Application {
         solveButton.setText("Solving...");
 
         List<Integer> diceNumbers = Arrays.stream(dices).map(Dice::getNumber).toList();
-        new Thread(() -> solver.solve(board.copy(), diceNumbers)).start();
+        new Thread(() -> solver.solve(board, diceNumbers)).start();
     }
 
     public void resetSolutionObjects() {

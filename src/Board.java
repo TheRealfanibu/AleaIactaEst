@@ -6,7 +6,8 @@ import java.util.stream.Stream;
 
 public class Board {
 
-    private static final int[][] NUMBERS = {
+
+    private static final int[][] NUMBERS = { // original board (no solution for 6x2)
             {1,5,4,3,2,6,0},
             {0,3,1,2,6,4,5},
             {6,2,3,5,1,0,4},
@@ -15,6 +16,16 @@ public class Board {
             {5,0,6,4,3,1,2},
             {2,1,5,0,4,3,6}
     };
+
+//    private static final int[][] NUMBERS = { // board with solutions for all dice combinations
+//            {2,0,5,1,6,3,4},
+//            {1,5,4,3,0,6,2},
+//            {4,6,0,2,3,1,5},
+//            {3,4,2,6,5,0,1},
+//            {5,3,6,4,1,2,0},
+//            {0,1,3,5,2,4,6},
+//            {6,2,1,0,4,5,3},
+//    };
 
     private final Field[][] boardFields;
     private final List<Field> allFields;
@@ -39,11 +50,11 @@ public class Board {
         return countDiceNumbersOfFields(allFields.stream().filter(field -> !field.isOccupied()));
     }
 
-    public int[] countDiceNumbersOfFields(Stream<Field> fieldStream) {
+    public static int[] countDiceNumbersOfFields(Stream<Field> fieldStream) {
         return countDiceNumbers(fieldStream.map(Field::getNumber));
     }
 
-    public int[] countDiceNumbers(Stream<Integer> numbers) {
+    public static int[] countDiceNumbers(Stream<Integer> numbers) {
         int[] diceNumbers = new int[7];
         numbers.forEach(number -> diceNumbers[number]++);
         return diceNumbers;

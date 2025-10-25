@@ -8,33 +8,51 @@ public class Solver {
 
     private boolean solving = false;
 
+    private final boolean searchOnlyOneSolution;
+
+    public Solver() {
+        searchOnlyOneSolution = true;
+        mainFrame = null;
+    }
 
     public Solver(MainFrame mainFrame) {
+        searchOnlyOneSolution = false;
         this.mainFrame = mainFrame;
     }
 
+
     public void solve(Board board, List<Integer> diceNumbers) {
-        solving = true;
-        solutions.clear();
+            board = board.copy();
+            solving = true;
+            solutions.clear();
 
-        int[] diceOccurrences = board.countDiceNumbers(diceNumbers.stream());
-        diceOccurrences[0] = 1; // one field must be empty
+            int[] diceOccurrences = Board.countDiceNumbers(diceNumbers.stream());
+            diceOccurrences[0] = 1; // one field must be empty
 
-        int[] visibleDiceNumbers = board.countVisibleDiceNumbers();
+            int[] visibleDiceNumbers = board.countVisibleDiceNumbers();
 
-        List<Piece> availablePieces = board.getAvailablePieces();
-        availablePieces.sort(Comparator.comparingInt(Piece::getAmountOccupations));
+            List<Piece> availablePieces = board.getAvailablePieces();
+            availablePieces.sort(Comparator.comparingInt(Piece::getAmountOccupations));
 
-        solveWithCurrentBoard(board, availablePieces, diceOccurrences, visibleDiceNumbers);
-        mainFrame.indicateSolvingFinished();
+            solveWithCurrentBoard(board, availablePieces, diceOccurrences, visibleDiceNumbers);
+            if (mainFrame != null)
+                mainFrame.indicateSolvingFinished();
     }
 
-    public void solveWithCurrentBoard(Board board, List<Piece> availablePieces, int[] diceOccurrences, int[] visibleDiceNumbers) {
+
+
+    public void solveWithCurrentBoard(Board board, List<Piece> availablePieces, int[] diceOccurrences,
+                                      int[] visibleDiceNumbers) {
 
         if(availablePieces.isEmpty()) {
             if (Arrays.equals(diceOccurrences, visibleDiceNumbers)) { // valid solution
                 solutions.add(board.copy());
-                mainFrame.updateSolutionStats();
+
+                if (searchOnlyOneSolution) {
+                    stop();
+                }
+                if (mainFrame != null)
+                    mainFrame.updateSolutionStats();
             }
             return;
         }
@@ -53,7 +71,7 @@ public class Solver {
 
                     if (board.fitsInPlace(orientation, rowOffset, columnOffset)) {
                             board.placePieceOnBoard(nextPiece, orientation, rowOffset, columnOffset);
-                            int[] diceNumbersOccupied = board.countDiceNumbersOfFields(nextPiece.getOccupiedFields().stream());
+                            int[] diceNumbersOccupied = Board.countDiceNumbersOfFields(nextPiece.getOccupiedFields().stream());
                             updateVisibleDiceNumbers(visibleDiceNumbers, diceNumbersOccupied, false);
 
                             solveWithCurrentBoard(board, availablePieces, diceOccurrences, visibleDiceNumbers);
