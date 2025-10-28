@@ -1,10 +1,13 @@
 import org.graphstream.algorithm.ConnectedComponents;
+import org.graphstream.graph.Edge;
 import org.graphstream.graph.Graph;
 import org.graphstream.graph.implementations.DefaultGraph;
 
 import java.util.*;
+import java.util.stream.Stream;
 
 public class Solver {
+
 
     private final List<Board> solutions = new ArrayList<>();
 
@@ -14,9 +17,12 @@ public class Solver {
 
     private final boolean searchOnlyOneSolution;
 
+    private static final int CONNECTIVITY_PIECE_LIMIT = 3;
+
     private Graph connectionGraph;
 
     private ConnectedComponents connectedFields;
+
 
     public Solver() {
         searchOnlyOneSolution = true;
@@ -60,6 +66,7 @@ public class Solver {
         solving = true;
         solutions.clear();
 
+        initConnectionGraph(board);
 
         int[] diceOccurrences = Board.countDiceNumbers(diceNumbers.stream());
         diceOccurrences[0] = 1; // one field must be empty
@@ -105,10 +112,15 @@ public class Solver {
 
                     if (board.fitsInPlace(orientation, rowOffset, columnOffset)) {
                         board.placePieceOnBoard(nextPiece, orientation, rowOffset, columnOffset);
+
+                        Stream<Edge> removedEdges = removeFieldsFromConnectionGraph(nextPiece.getOccupiedFields());
+
                         int[] diceNumbersOccupied = Board.countDiceNumbersOfFields(nextPiece.getOccupiedFields().stream());
                         updateVisibleDiceNumbers(visibleDiceNumbers, diceNumbersOccupied, false);
 
                         solveWithCurrentBoard(board, availablePieces, diceOccurrences, visibleDiceNumbers);
+
+                        reinsertFieldsToConnectionGraph(nextPiece.getOccupiedFields(), removedEdges);
 
                         updateVisibleDiceNumbers(visibleDiceNumbers, diceNumbersOccupied, true);
                         board.removeLastPieceFromBoard();
@@ -117,6 +129,24 @@ public class Solver {
             }
         }
         availablePieces.add(0, nextPiece);
+    }
+
+    private void reinsertFieldsToConnectionGraph(List<Field> occupiedFields, Stream<Edge> removedEdges) {
+        occupiedFields.forEach(field -> connectionGraph.addNode(field.getId()));
+
+        removedEdges.forEach(edge -> {
+            String node0Id = edge.getNode0().getId();
+            String node1Id = edge.getNode1().getId();
+            connectionGraph.addEdge(node0Id + "-" + node1Id, node0Id, node1Id);
+        });
+    }
+
+    private Stream<Edge> removeFieldsFromConnectionGraph(List<Field> occupiedFields) {
+        Stream<Edge> removedEdges = occupiedFields.stream()
+                .flatMap(field -> connectionGraph.getNode(field.getId()).edges());
+
+        occupiedFields.forEach(field -> connectionGraph.removeNode(field.getId()));
+        return removedEdges;
     }
 
     private void updateVisibleDiceNumbers(int[] visibleDiceNumbers, int[] diceNumbers, boolean add) {
