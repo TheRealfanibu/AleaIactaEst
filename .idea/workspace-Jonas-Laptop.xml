@@ -1,0 +1,442 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="AnalysisUIOptions">
+    <option name="ANALYZE_INJECTED_CODE" value="false" />
+  </component>
+  <component name="AutoImportSettings">
+    <option name="autoReloadType" value="SELECTIVE" />
+  </component>
+  <component name="ChangeListManager">
+    <list default="true" id="92aedc51-b048-4ea6-ba20-53d2eb3758e7" name="Changes" comment="move pieces on board, releasing buggy v2">
+      <change beforePath="$PROJECT_DIR$/src/PieceSidebar.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/PieceSidebar.java" afterDir="false" />
+    </list>
+    <option name="SHOW_DIALOG" value="false" />
+    <option name="HIGHLIGHT_CONFLICTS" value="true" />
+    <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
+    <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="DarkyenusTimeTracker">
+    <option name="totalTimeSeconds" value="121350" />
+    <option name="gitIntegration" value="true" />
+    <option name="naggedAbout" value="1" />
+  </component>
+  <component name="FileTemplateManagerImpl">
+    <option name="RECENT_TEMPLATES">
+      <list>
+        <option value="Record" />
+        <option value="Class" />
+      </list>
+    </option>
+  </component>
+  <component name="Git.Settings">
+    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
+  </component>
+  <component name="GitHubPullRequestSearchHistory">{
+  &quot;lastFilter&quot;: {
+    &quot;state&quot;: &quot;OPEN&quot;,
+    &quot;assignee&quot;: &quot;TheRealfanibu&quot;
+  }
+}</component>
+  <component name="GithubPullRequestsUISettings">{
+  &quot;selectedUrlAndAccountId&quot;: {
+    &quot;url&quot;: &quot;https://github.com/TheRealfanibu/AleaIactaEst.git&quot;,
+    &quot;accountId&quot;: &quot;1e397fe3-403c-44fe-8685-3835df5be1b9&quot;
+  }
+}</component>
+  <component name="MarkdownSettingsMigration">
+    <option name="stateVersion" value="1" />
+  </component>
+  <component name="ProblemsViewState">
+    <option name="selectedTabId" value="CurrentFile" />
+  </component>
+  <component name="ProjectColorInfo">{
+  &quot;associatedIndex&quot;: 5
+}</component>
+  <component name="ProjectId" id="2Zr2yLrCb80vLOcklsP743jkdMm" />
+  <component name="ProjectLevelVcsManager">
+    <ConfirmationsSetting value="2" id="Add" />
+  </component>
+  <component name="ProjectViewState">
+    <option name="hideEmptyMiddlePackages" value="true" />
+    <option name="showLibraryContents" value="true" />
+  </component>
+  <component name="PropertiesComponent"><![CDATA[{
+  "keyToString": {
+    "Application.MainFrame.executor": "Debug",
+    "Downloaded.Files.Path.Enabled": "false",
+    "Repository.Attach.Annotations": "false",
+    "Repository.Attach.JavaDocs": "false",
+    "Repository.Attach.Sources": "false",
+    "RunOnceActivity.OpenProjectViewOnStart": "true",
+    "RunOnceActivity.ShowReadmeOnStart": "true",
+    "RunOnceActivity.git.unshallow": "true",
+    "WebServerToolWindowFactoryState": "false",
+    "git-widget-placeholder": "master",
+    "junie.onboarding.icon.badge.shown": "true",
+    "kotlin-language-version-configured": "true",
+    "last_opened_file_path": "C:/Users/Jonas/OneDrive/Bachelor Informatik/04-SoSe 21/Software Projekt",
+    "node.js.detected.package.eslint": "true",
+    "node.js.detected.package.tslint": "true",
+    "node.js.selected.package.eslint": "(autodetect)",
+    "node.js.selected.package.tslint": "(autodetect)",
+    "nodejs_package_manager_path": "npm",
+    "project.structure.last.edited": "Libraries",
+    "project.structure.proportion": "0.15",
+    "project.structure.side.proportion": "0.2",
+    "run.code.analysis.last.selected.profile": "pProject Default",
+    "settings.editor.selected.configurable": "editor.preferences.fonts.default",
+    "to.speed.mode.migration.done": "true",
+    "vue.rearranger.settings.migration": "true"
+  }
+}]]></component>
+  <component name="RecentsManager">
+    <key name="MoveFile.RECENT_KEYS">
+      <recent name="C:\Users\Jonas\OneDrive\Dokumente\Programming\Alea Iacta Est\src\res" />
+      <recent name="C:\Users\Jonas\OneDrive\Dokumente\Programming\Alea Iacta Est\src" />
+      <recent name="C:\Users\Jonas\OneDrive\Dokumente\Programming\Alea Iacta Est\res" />
+    </key>
+    <key name="MoveMembersDialog.RECENTS_KEY">
+      <recent name="Board" />
+      <recent name="MainFrame" />
+    </key>
+    <key name="MoveInnerDialog.RECENTS_KEY">
+      <recent name="" />
+    </key>
+  </component>
+  <component name="RunManager">
+    <configuration name="MainFrame" type="Application" factoryName="Application" temporary="true" nameIsGenerated="true">
+      <option name="MAIN_CLASS_NAME" value="MainFrame" />
+      <module name="Alea Iacta Est" />
+      <option name="VM_PARAMETERS" value="--module-path &quot;C:\Program Files\Java\javafx-sdk-17.0.6\lib&quot; --add-modules javafx.controls" />
+      <method v="2">
+        <option name="Make" enabled="true" />
+      </method>
+    </configuration>
+    <recent_temporary>
+      <list>
+        <item itemvalue="Application.MainFrame" />
+      </list>
+    </recent_temporary>
+  </component>
+  <component name="SharedIndexes">
+    <attachedChunks>
+      <set>
+        <option value="bundled-jdk-9823dce3aa75-bf35d07a577b-intellij.indexing.shared.core-IU-252.26199.169" />
+        <option value="bundled-js-predefined-d6986cc7102b-9c94529fcfe0-JavaScript-IU-252.26199.169" />
+      </set>
+    </attachedChunks>
+  </component>
+  <component name="SpellCheckerSettings" RuntimeDictionaries="0" Folders="0" CustomDictionaries="0" DefaultDictionary="application-level" UseSingleDictionary="true" transferred="true" />
+  <component name="TaskManager">
+    <task active="true" id="Default" summary="Default task">
+      <changelist id="92aedc51-b048-4ea6-ba20-53d2eb3758e7" name="Changes" comment="" />
+      <created>1703166130876</created>
+      <option name="number" value="Default" />
+      <option name="presentableId" value="Default" />
+      <updated>1703166130876</updated>
+      <workItem from="1703166132302" duration="8071000" />
+      <workItem from="1703182574713" duration="6435000" />
+      <workItem from="1703515835439" duration="18916000" />
+      <workItem from="1703540848513" duration="10392000" />
+      <workItem from="1703599179333" duration="4632000" />
+      <workItem from="1703793861740" duration="2042000" />
+      <workItem from="1704786204516" duration="187000" />
+      <workItem from="1704983473313" duration="67000" />
+      <workItem from="1760390126684" duration="4313000" />
+      <workItem from="1760437993892" duration="10478000" />
+      <workItem from="1760455284998" duration="7683000" />
+      <workItem from="1760467511987" duration="803000" />
+      <workItem from="1760615485063" duration="5983000" />
+      <workItem from="1760627713510" duration="18612000" />
+      <workItem from="1760773073507" duration="1520000" />
+      <workItem from="1760872911475" duration="13260000" />
+      <workItem from="1760888715947" duration="671000" />
+      <workItem from="1760971528981" duration="350000" />
+      <workItem from="1760990069957" duration="1983000" />
+      <workItem from="1761044281670" duration="2261000" />
+      <workItem from="1761051577104" duration="8337000" />
+      <workItem from="1761127187721" duration="10930000" />
+      <workItem from="1761141012656" duration="8785000" />
+      <workItem from="1761166253217" duration="6551000" />
+      <workItem from="1761217888399" duration="1221000" />
+    </task>
+    <task id="LOCAL-00001" summary="Pieces modeled and able to draw pieces">
+      <created>1703185136984</created>
+      <option name="number" value="00001" />
+      <option name="presentableId" value="LOCAL-00001" />
+      <option name="project" value="LOCAL" />
+      <updated>1703185136984</updated>
+    </task>
+    <task id="LOCAL-00002" summary="draw dice numbers">
+      <created>1703189896567</created>
+      <option name="number" value="00002" />
+      <option name="presentableId" value="LOCAL-00002" />
+      <option name="project" value="LOCAL" />
+      <updated>1703189896567</updated>
+    </task>
+    <task id="LOCAL-00003" summary="draw baselines of pieces">
+      <option name="closed" value="true" />
+      <created>1703519270867</created>
+      <option name="number" value="00003" />
+      <option name="presentableId" value="LOCAL-00003" />
+      <option name="project" value="LOCAL" />
+      <updated>1703519270867</updated>
+    </task>
+    <task id="LOCAL-00004" summary="project configuration">
+      <option name="closed" value="true" />
+      <created>1703519333756</created>
+      <option name="number" value="00004" />
+      <option name="presentableId" value="LOCAL-00004" />
+      <option name="project" value="LOCAL" />
+      <updated>1703519333756</updated>
+    </task>
+    <task id="LOCAL-00005" summary="arc connection">
+      <option name="closed" value="true" />
+      <created>1703538244851</created>
+      <option name="number" value="00005" />
+      <option name="presentableId" value="LOCAL-00005" />
+      <option name="project" value="LOCAL" />
+      <updated>1703538244851</updated>
+    </task>
+    <task id="LOCAL-00006" summary="distinguish pieces by outer border">
+      <option name="closed" value="true" />
+      <created>1703541105983</created>
+      <option name="number" value="00006" />
+      <option name="presentableId" value="LOCAL-00006" />
+      <option name="project" value="LOCAL" />
+      <updated>1703541105983</updated>
+    </task>
+    <task id="LOCAL-00007" summary="basic solver">
+      <option name="closed" value="true" />
+      <created>1703554407187</created>
+      <option name="number" value="00007" />
+      <option name="presentableId" value="LOCAL-00007" />
+      <option name="project" value="LOCAL" />
+      <updated>1703554407187</updated>
+    </task>
+    <task id="LOCAL-00008" summary="dice choosing">
+      <option name="closed" value="true" />
+      <created>1703601842130</created>
+      <option name="number" value="00008" />
+      <option name="presentableId" value="LOCAL-00008" />
+      <option name="project" value="LOCAL" />
+      <updated>1703601842130</updated>
+    </task>
+    <task id="LOCAL-00009" summary="can request solutions one after another">
+      <option name="closed" value="true" />
+      <created>1703603186597</created>
+      <option name="number" value="00009" />
+      <option name="presentableId" value="LOCAL-00009" />
+      <option name="project" value="LOCAL" />
+      <updated>1703603186597</updated>
+    </task>
+    <task id="LOCAL-00010" summary="implementing piece shape generation">
+      <option name="closed" value="true" />
+      <created>1760449143337</created>
+      <option name="number" value="00010" />
+      <option name="presentableId" value="LOCAL-00010" />
+      <option name="project" value="LOCAL" />
+      <updated>1760449143337</updated>
+    </task>
+    <task id="LOCAL-00011" summary="basic shape without arc">
+      <option name="closed" value="true" />
+      <created>1760461398834</created>
+      <option name="number" value="00011" />
+      <option name="presentableId" value="LOCAL-00011" />
+      <option name="project" value="LOCAL" />
+      <updated>1760461398834</updated>
+    </task>
+    <task id="LOCAL-00012" summary="nice path visualization">
+      <option name="closed" value="true" />
+      <created>1760463215212</created>
+      <option name="number" value="00012" />
+      <option name="presentableId" value="LOCAL-00012" />
+      <option name="project" value="LOCAL" />
+      <updated>1760463215212</updated>
+    </task>
+    <task id="LOCAL-00013" summary="refactored piece drawing into piece class">
+      <option name="closed" value="true" />
+      <created>1760464929533</created>
+      <option name="number" value="00013" />
+      <option name="presentableId" value="LOCAL-00013" />
+      <option name="project" value="LOCAL" />
+      <updated>1760464929533</updated>
+    </task>
+    <task id="LOCAL-00014" summary="Move dice pane to the left">
+      <option name="closed" value="true" />
+      <created>1760628308390</created>
+      <option name="number" value="00014" />
+      <option name="presentableId" value="LOCAL-00014" />
+      <option name="project" value="LOCAL" />
+      <updated>1760628308390</updated>
+    </task>
+    <task id="LOCAL-00015" summary="Remove pieces from board">
+      <option name="closed" value="true" />
+      <created>1760630193063</created>
+      <option name="number" value="00015" />
+      <option name="presentableId" value="LOCAL-00015" />
+      <option name="project" value="LOCAL" />
+      <updated>1760630193063</updated>
+    </task>
+    <task id="LOCAL-00016" summary="can solve partial positions">
+      <option name="closed" value="true" />
+      <created>1760632239259</created>
+      <option name="number" value="00016" />
+      <option name="presentableId" value="LOCAL-00016" />
+      <option name="project" value="LOCAL" />
+      <updated>1760632239259</updated>
+    </task>
+    <task id="LOCAL-00017" summary="see multiple solutions">
+      <option name="closed" value="true" />
+      <created>1760647753844</created>
+      <option name="number" value="00017" />
+      <option name="presentableId" value="LOCAL-00017" />
+      <option name="project" value="LOCAL" />
+      <updated>1760647753844</updated>
+    </task>
+    <task id="LOCAL-00018" summary="reset solutions when board is modified&#10;see solution status&#10;visually separate fixed solution pieces">
+      <option name="closed" value="true" />
+      <created>1760876352813</created>
+      <option name="number" value="00018" />
+      <option name="presentableId" value="LOCAL-00018" />
+      <option name="project" value="LOCAL" />
+      <updated>1760876352813</updated>
+    </task>
+    <task id="LOCAL-00019" summary="improved solver by elimination through visible dice numbers">
+      <option name="closed" value="true" />
+      <created>1760879226798</created>
+      <option name="number" value="00019" />
+      <option name="presentableId" value="LOCAL-00019" />
+      <option name="project" value="LOCAL" />
+      <updated>1760879226798</updated>
+    </task>
+    <task id="LOCAL-00020" summary="simplified valid solution checking">
+      <option name="closed" value="true" />
+      <created>1760884479293</created>
+      <option name="number" value="00020" />
+      <option name="presentableId" value="LOCAL-00020" />
+      <option name="project" value="LOCAL" />
+      <updated>1760884479293</updated>
+    </task>
+    <task id="LOCAL-00021" summary="show vertical piece sidebar">
+      <option name="closed" value="true" />
+      <created>1761045632522</created>
+      <option name="number" value="00021" />
+      <option name="presentableId" value="LOCAL-00021" />
+      <option name="project" value="LOCAL" />
+      <updated>1761045632522</updated>
+    </task>
+    <task id="LOCAL-00022" summary="show piece sidebar in two column">
+      <option name="closed" value="true" />
+      <created>1761052262903</created>
+      <option name="number" value="00022" />
+      <option name="presentableId" value="LOCAL-00022" />
+      <option name="project" value="LOCAL" />
+      <updated>1761052262903</updated>
+    </task>
+    <task id="LOCAL-00023" summary="drag piece with dragview">
+      <option name="closed" value="true" />
+      <created>1761065009442</created>
+      <option name="number" value="00023" />
+      <option name="presentableId" value="LOCAL-00023" />
+      <option name="project" value="LOCAL" />
+      <updated>1761065009442</updated>
+    </task>
+    <task id="LOCAL-00024" summary="drag piece with dragview v2">
+      <option name="closed" value="true" />
+      <created>1761065159895</created>
+      <option name="number" value="00024" />
+      <option name="presentableId" value="LOCAL-00024" />
+      <option name="project" value="LOCAL" />
+      <updated>1761065159895</updated>
+    </task>
+    <task id="LOCAL-00025" summary="drag and drop pieces visually but not on board">
+      <option name="closed" value="true" />
+      <created>1761133384720</created>
+      <option name="number" value="00025" />
+      <option name="presentableId" value="LOCAL-00025" />
+      <option name="project" value="LOCAL" />
+      <updated>1761133384720</updated>
+    </task>
+    <task id="LOCAL-00026" summary="drag and drop visually on board">
+      <option name="closed" value="true" />
+      <created>1761143467247</created>
+      <option name="number" value="00026" />
+      <option name="presentableId" value="LOCAL-00026" />
+      <option name="project" value="LOCAL" />
+      <updated>1761143467247</updated>
+    </task>
+    <task id="LOCAL-00027" summary="place pieces on board">
+      <option name="closed" value="true" />
+      <created>1761145703158</created>
+      <option name="number" value="00027" />
+      <option name="presentableId" value="LOCAL-00027" />
+      <option name="project" value="LOCAL" />
+      <updated>1761145703158</updated>
+    </task>
+    <task id="LOCAL-00028" summary="move pieces on board, releasing buggy">
+      <option name="closed" value="true" />
+      <created>1761172591399</created>
+      <option name="number" value="00028" />
+      <option name="presentableId" value="LOCAL-00028" />
+      <option name="project" value="LOCAL" />
+      <updated>1761172591399</updated>
+    </task>
+    <task id="LOCAL-00029" summary="move pieces on board, releasing buggy v2">
+      <option name="closed" value="true" />
+      <created>1761172633621</created>
+      <option name="number" value="00029" />
+      <option name="presentableId" value="LOCAL-00029" />
+      <option name="project" value="LOCAL" />
+      <updated>1761172633621</updated>
+    </task>
+    <option name="localTasksCounter" value="30" />
+    <servers />
+  </component>
+  <component name="TypeScriptGeneratedFilesManager">
+    <option name="version" value="3" />
+  </component>
+  <component name="Vcs.Log.Tabs.Properties">
+    <option name="TAB_STATES">
+      <map>
+        <entry key="MAIN">
+          <value>
+            <State />
+          </value>
+        </entry>
+      </map>
+    </option>
+  </component>
+  <component name="VcsManagerConfiguration">
+    <MESSAGE value="arc connection" />
+    <MESSAGE value="distinguish pieces by outer border" />
+    <MESSAGE value="basic solver" />
+    <MESSAGE value="dice choosing" />
+    <MESSAGE value="can request solutions one after another" />
+    <MESSAGE value="implementing piece shape generation" />
+    <MESSAGE value="basic shape without arc" />
+    <MESSAGE value="nice path visualization" />
+    <MESSAGE value="refactored piece drawing into piece class" />
+    <MESSAGE value="Move dice pane to the left" />
+    <MESSAGE value="Remove pieces from board" />
+    <MESSAGE value="can solve partial positions" />
+    <MESSAGE value="see multiple solutions" />
+    <MESSAGE value="reset solutions when board is modified&#10;see solution status&#10;visually separate fixed solution pieces" />
+    <MESSAGE value="improved solver by elimination through visible dice numbers" />
+    <MESSAGE value="simplified valid solution checking" />
+    <MESSAGE value="show vertical piece sidebar" />
+    <MESSAGE value="show piece sidebar in two column" />
+    <MESSAGE value="drag piece with dragview" />
+    <MESSAGE value="drag piece with dragview v2" />
+    <MESSAGE value="drag and drop pieces visually but not on board" />
+    <MESSAGE value="drag and drop visually on board" />
+    <MESSAGE value="place pieces on board" />
+    <MESSAGE value="move pieces on board, releasing buggy" />
+    <MESSAGE value="move pieces on board, releasing buggy v2" />
+    <option name="LAST_COMMIT_MESSAGE" value="move pieces on board, releasing buggy v2" />
+  </component>
+  <component name="XSLT-Support.FileAssociations.UIState">
+    <expand />
+    <select />
+  </component>
+</project>

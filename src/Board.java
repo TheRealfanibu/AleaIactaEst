@@ -17,7 +17,7 @@ public class Board {
             {2,1,5,0,4,3,6}
     };
 
-//    private static final int[][] NUMBERS = { // board with solutions for all dice combinations
+//    private static final int[][] NUMBERS = { // example board with solutions for all dice combinations
 //            {2,0,5,1,6,3,4},
 //            {1,5,4,3,0,6,2},
 //            {4,6,0,2,3,1,5},
@@ -40,6 +40,10 @@ public class Board {
         initField();
 
         allPieces.forEach(piece -> piece.setBoard(this));
+    }
+
+    public List<Field> getUnoccupiedFields() {
+        return allFields.stream().filter(field -> !field.isOccupied()).toList();
     }
 
     public static boolean isOutOfBounds(int row, int column) {

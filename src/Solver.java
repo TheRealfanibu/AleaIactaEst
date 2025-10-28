@@ -1,3 +1,7 @@
+import org.graphstream.algorithm.ConnectedComponents;
+import org.graphstream.graph.Graph;
+import org.graphstream.graph.implementations.DefaultGraph;
+
 import java.util.*;
 
 public class Solver {
@@ -10,6 +14,10 @@ public class Solver {
 
     private final boolean searchOnlyOneSolution;
 
+    private Graph connectionGraph;
+
+    private ConnectedComponents connectedFields;
+
     public Solver() {
         searchOnlyOneSolution = true;
         mainFrame = null;
@@ -20,31 +28,57 @@ public class Solver {
         this.mainFrame = mainFrame;
     }
 
+    public void initConnectionGraph(Board board) {
+        List<Field> unoccupiedFields = board.getUnoccupiedFields();
 
-    public void solve(Board board, List<Integer> diceNumbers) {
-            board = board.copy();
-            solving = true;
-            solutions.clear();
+        connectionGraph = new DefaultGraph("ConnectionGraph", true, false,
+                unoccupiedFields.size(), unoccupiedFields.size() * 4);
 
-            int[] diceOccurrences = Board.countDiceNumbers(diceNumbers.stream());
-            diceOccurrences[0] = 1; // one field must be empty
+        unoccupiedFields.forEach(field -> connectionGraph.addNode(String.valueOf(field.getId())));
 
-            int[] visibleDiceNumbers = board.countVisibleDiceNumbers();
-
-            List<Piece> availablePieces = board.getAvailablePieces();
-            availablePieces.sort(Comparator.comparingInt(Piece::getAmountOccupations));
-
-            solveWithCurrentBoard(board, availablePieces, diceOccurrences, visibleDiceNumbers);
-            if (mainFrame != null)
-                mainFrame.indicateSolvingFinished();
+        for (Field field : unoccupiedFields) {
+            addEdgeToGraphIfNeighborConnected(board, field, 1, 0);
+            addEdgeToGraphIfNeighborConnected(board, field, 0, 1);
+        }
+        connectedFields = new ConnectedComponents(connectionGraph);
     }
 
+    private void addEdgeToGraphIfNeighborConnected(Board board, Field field, int rowOffset, int columnOffset) {
+
+        int row = field.getRow() + rowOffset;
+        int column = field.getColumn() + columnOffset;
+        if (!Board.isOutOfBounds(row, column) &&
+                !board.getFieldOnBoard(row, column).isOccupied()) {
+            Field connectedField = board.getFieldOnBoard(row, column);
+            connectionGraph.addEdge(field.getId() + "-" + connectedField.getId(), field.getId(), connectedField.getId());
+        }
+    }
+
+
+    public void solve(Board board, List<Integer> diceNumbers) {
+        board = board.copy();
+        solving = true;
+        solutions.clear();
+
+
+        int[] diceOccurrences = Board.countDiceNumbers(diceNumbers.stream());
+        diceOccurrences[0] = 1; // one field must be empty
+
+        int[] visibleDiceNumbers = board.countVisibleDiceNumbers();
+
+        List<Piece> availablePieces = board.getAvailablePieces();
+        availablePieces.sort(Comparator.comparingInt(Piece::getAmountOccupations));
+
+        solveWithCurrentBoard(board, availablePieces, diceOccurrences, visibleDiceNumbers);
+        if (mainFrame != null)
+            mainFrame.indicateSolvingFinished();
+    }
 
 
     public void solveWithCurrentBoard(Board board, List<Piece> availablePieces, int[] diceOccurrences,
                                       int[] visibleDiceNumbers) {
 
-        if(availablePieces.isEmpty()) {
+        if (availablePieces.isEmpty()) {
             if (Arrays.equals(diceOccurrences, visibleDiceNumbers)) { // valid solution
                 solutions.add(board.copy());
 
@@ -57,12 +91,12 @@ public class Solver {
             return;
         }
 
-        if(!areEnoughSolutionDiceNumbersAvailable(diceOccurrences, visibleDiceNumbers)) {
+        if (!areEnoughSolutionDiceNumbersAvailable(diceOccurrences, visibleDiceNumbers)) {
             return;
         }
 
         Piece nextPiece = availablePieces.remove(0);
-        for(PieceOrientation orientation : nextPiece.getOrientations()) {
+        for (PieceOrientation orientation : nextPiece.getOrientations()) {
             for (int rowOffset = 0; rowOffset <= 7 - orientation.getHeight(); rowOffset++) {
                 for (int columnOffset = 0; columnOffset <= 7 - orientation.getWidth(); columnOffset++) {
                     if (!solving) {
@@ -70,14 +104,14 @@ public class Solver {
                     }
 
                     if (board.fitsInPlace(orientation, rowOffset, columnOffset)) {
-                            board.placePieceOnBoard(nextPiece, orientation, rowOffset, columnOffset);
-                            int[] diceNumbersOccupied = Board.countDiceNumbersOfFields(nextPiece.getOccupiedFields().stream());
-                            updateVisibleDiceNumbers(visibleDiceNumbers, diceNumbersOccupied, false);
+                        board.placePieceOnBoard(nextPiece, orientation, rowOffset, columnOffset);
+                        int[] diceNumbersOccupied = Board.countDiceNumbersOfFields(nextPiece.getOccupiedFields().stream());
+                        updateVisibleDiceNumbers(visibleDiceNumbers, diceNumbersOccupied, false);
 
-                            solveWithCurrentBoard(board, availablePieces, diceOccurrences, visibleDiceNumbers);
+                        solveWithCurrentBoard(board, availablePieces, diceOccurrences, visibleDiceNumbers);
 
-                            updateVisibleDiceNumbers(visibleDiceNumbers, diceNumbersOccupied, true);
-                            board.removeLastPieceFromBoard();
+                        updateVisibleDiceNumbers(visibleDiceNumbers, diceNumbersOccupied, true);
+                        board.removeLastPieceFromBoard();
                     }
                 }
             }
@@ -96,7 +130,7 @@ public class Solver {
     }
 
     private boolean areEnoughSolutionDiceNumbersAvailable(int[] diceOccurrences, int[] visibleDiceNumbers) {
-        for (int diceNumber = 0; diceNumber < 7 ; diceNumber++) {
+        for (int diceNumber = 0; diceNumber < 7; diceNumber++) {
             if (visibleDiceNumbers[diceNumber] < diceOccurrences[diceNumber]) { // too many number fields occupied
                 return false;
             }

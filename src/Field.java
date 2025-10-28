@@ -5,9 +5,12 @@ public class Field {
     private final FieldPosition position;
     private final int number;
 
+    private final String id;
+
     public Field(int row, int column, int number) {
         this.number = number;
         position = new FieldPosition(row, column);
+        id = String.valueOf(row * 7 + column);
     }
 
     public int getTopLeftCornerXCoordinate() {
@@ -42,4 +45,7 @@ public class Field {
         return position.column();
     }
 
+    public String getId() {
+        return id;
+    }
 }
