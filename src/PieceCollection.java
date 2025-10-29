@@ -55,7 +55,7 @@ public class PieceCollection {
 
     public static List<Piece> createPieceInstances() {
         return ALL_PIECES.stream()
-                .map(piece -> new Piece(piece.getAmountOccupations(), piece.getOrientations(), piece.getId()))
+                .map(piece -> new Piece(piece.getNumOccupations(), piece.getOrientations(), piece.getId()))
                 .toList();
     }
 

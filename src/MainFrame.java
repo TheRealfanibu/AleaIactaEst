@@ -240,6 +240,7 @@ public class MainFrame extends Application {
 
         List<Integer> diceNumbers = Arrays.stream(dices).map(Dice::getNumber).toList();
         new Thread(() -> solver.solve(board, diceNumbers)).start();
+        //new Thread(() -> solver.initConnectionGraph(board)).start();
     }
 
     public void resetSolutionObjects() {

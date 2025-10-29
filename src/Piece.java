@@ -13,7 +13,8 @@ public class Piece {
     private static final int OUTER_MARGIN = 8;
     private static final int INNER_MARGIN = 6;
 
-    private final int amountOccupations;
+    private final int numOccupations;
+    private final int minDimension, maxDimension;
     private final PieceOrientation[] orientations;
     private final int id;
 
@@ -27,14 +28,18 @@ public class Piece {
 
     private Board board;
 
-    public Piece(int amountOccupations, PieceOrientation[] orientations, int id) {
-        this.amountOccupations = amountOccupations;
+    public Piece(int numOccupations, PieceOrientation[] orientations, int id) {
+        this.numOccupations = numOccupations;
         this.orientations = orientations;
+
+        PieceOrientation orientation = orientations[0];
+        this.minDimension = Math.min(orientation.getHeight(), orientation.getWidth());
+        this.maxDimension = Math.max(orientation.getHeight(), orientation.getWidth());
         this.id = id;
     }
 
     public Piece copy() {
-        return new Piece(amountOccupations, orientations, id);
+        return new Piece(numOccupations, orientations, id);
     }
 
     public void drawPiece(GraphicsContext graphics, List<Piece> fixedPiecesOnBoard) {
@@ -183,8 +188,8 @@ public class Piece {
         this.board = board;
     }
 
-    public int getAmountOccupations() {
-        return amountOccupations;
+    public int getNumOccupations() {
+        return numOccupations;
     }
 
     public PieceOrientation[] getOrientations() {
@@ -229,6 +234,14 @@ public class Piece {
 
     public int getOrientationIndex() {
         return Arrays.asList(orientations).indexOf(orientationOnBoard);
+    }
+
+    public int getMinDimension() {
+        return minDimension;
+    }
+
+    public int getMaxDimension() {
+        return maxDimension;
     }
 
     private enum Direction {

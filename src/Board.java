@@ -114,7 +114,7 @@ public class Board {
     }
 
     public List<Piece> getAvailablePieces() {
-        List<Piece> availablePieces = new ArrayList<>(allPieces);
+        List<Piece> availablePieces = new LinkedList<>(allPieces);
         availablePieces.removeAll(piecesOnBoard);
         return availablePieces;
     }

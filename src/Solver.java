@@ -1,6 +1,9 @@
 import org.graphstream.algorithm.ConnectedComponents;
+import org.graphstream.algorithm.ConnectedComponents.ConnectedComponent;
 import org.graphstream.graph.Edge;
 import org.graphstream.graph.Graph;
+import org.graphstream.graph.Node;
+import org.graphstream.graph.implementations.AbstractGraph;
 import org.graphstream.graph.implementations.DefaultGraph;
 
 import java.util.*;
@@ -17,11 +20,13 @@ public class Solver {
 
     private final boolean searchOnlyOneSolution;
 
-    private static final int CONNECTIVITY_PIECE_LIMIT = 3;
+    private static final int CONNECTIVITY_PIECE_LIMIT = 7;
 
     private Graph connectionGraph;
 
     private ConnectedComponents connectedFields;
+
+    private final Map<Set<Node>, FieldComponentProperty> fieldComponentProperties = new HashMap<>();
 
 
     public Solver() {
@@ -34,19 +39,56 @@ public class Solver {
         this.mainFrame = mainFrame;
     }
 
-    public void initConnectionGraph(Board board) {
+    public void solve(Board board, List<Integer> diceNumbers) {
+        board = board.copy();
+        solving = true;
+        solutions.clear();
+
+        initConnectivityGraph(board);
+
+        int[] diceOccurrences = Board.countDiceNumbers(diceNumbers.stream());
+        diceOccurrences[0] = 1; // one field must be empty
+
+        int[] visibleDiceNumbers = board.countVisibleDiceNumbers();
+
+        List<Piece> availablePieces = board.getAvailablePieces();
+
+        Comparator<Piece> pieceSorter = Comparator.comparingInt(Piece::getNumOccupations)
+                .thenComparingInt(Piece::getMaxDimension)
+                .thenComparingInt(Piece::getMinDimension);
+
+        availablePieces.sort(pieceSorter);
+
+        solveWithCurrentBoard(board, availablePieces, diceOccurrences, visibleDiceNumbers);
+        if (mainFrame != null)
+            mainFrame.indicateSolvingFinished();
+    }
+
+    public void initConnectivityGraph(Board board) {
         List<Field> unoccupiedFields = board.getUnoccupiedFields();
 
         connectionGraph = new DefaultGraph("ConnectionGraph", true, false,
                 unoccupiedFields.size(), unoccupiedFields.size() * 4);
+        connectionGraph.setNodeFactory((id, graph) -> new BoardNode((AbstractGraph) graph, id));
 
-        unoccupiedFields.forEach(field -> connectionGraph.addNode(String.valueOf(field.getId())));
+        addFieldsToConnectivityGraph(unoccupiedFields);
 
         for (Field field : unoccupiedFields) {
             addEdgeToGraphIfNeighborConnected(board, field, 1, 0);
             addEdgeToGraphIfNeighborConnected(board, field, 0, 1);
         }
         connectedFields = new ConnectedComponents(connectionGraph);
+
+//        System.setProperty("org.graphstream.ui", "swing");
+//        connectionGraph.display();
+//        System.out.println(connectedFields.getConnectedComponentsCount());
+    }
+
+    private void addFieldsToConnectivityGraph(List<Field> fields) {
+        fields.forEach(field -> {
+            BoardNode node = (BoardNode) connectionGraph.addNode(field.getId());
+            node.setField(field);
+        });
     }
 
     private void addEdgeToGraphIfNeighborConnected(Board board, Field field, int rowOffset, int columnOffset) {
@@ -61,32 +103,11 @@ public class Solver {
     }
 
 
-    public void solve(Board board, List<Integer> diceNumbers) {
-        board = board.copy();
-        solving = true;
-        solutions.clear();
-
-        initConnectionGraph(board);
-
-        int[] diceOccurrences = Board.countDiceNumbers(diceNumbers.stream());
-        diceOccurrences[0] = 1; // one field must be empty
-
-        int[] visibleDiceNumbers = board.countVisibleDiceNumbers();
-
-        List<Piece> availablePieces = board.getAvailablePieces();
-        availablePieces.sort(Comparator.comparingInt(Piece::getAmountOccupations));
-
-        solveWithCurrentBoard(board, availablePieces, diceOccurrences, visibleDiceNumbers);
-        if (mainFrame != null)
-            mainFrame.indicateSolvingFinished();
-    }
-
-
-    public void solveWithCurrentBoard(Board board, List<Piece> availablePieces, int[] diceOccurrences,
+    public void solveWithCurrentBoard(Board board, List<Piece> availablePieces, int[] diceNumbers,
                                       int[] visibleDiceNumbers) {
 
         if (availablePieces.isEmpty()) {
-            if (Arrays.equals(diceOccurrences, visibleDiceNumbers)) { // valid solution
+            if (Arrays.equals(diceNumbers, visibleDiceNumbers)) { // valid solution
                 solutions.add(board.copy());
 
                 if (searchOnlyOneSolution) {
@@ -98,9 +119,16 @@ public class Solver {
             return;
         }
 
-        if (!areEnoughSolutionDiceNumbersAvailable(diceOccurrences, visibleDiceNumbers)) {
+        if (!areEnoughSolutionDiceNumbersAvailable(diceNumbers, visibleDiceNumbers)) {
             return;
         }
+
+        if (board.getPiecesOnBoard().size() <= CONNECTIVITY_PIECE_LIMIT &&
+                !areFieldComponentsCompatible(availablePieces, diceNumbers)) {
+            return;
+        }
+
+        boolean updateConnectivity = board.getPiecesOnBoard().size() < CONNECTIVITY_PIECE_LIMIT;
 
         Piece nextPiece = availablePieces.remove(0);
         for (PieceOrientation orientation : nextPiece.getOrientations()) {
@@ -113,14 +141,19 @@ public class Solver {
                     if (board.fitsInPlace(orientation, rowOffset, columnOffset)) {
                         board.placePieceOnBoard(nextPiece, orientation, rowOffset, columnOffset);
 
-                        Stream<Edge> removedEdges = removeFieldsFromConnectionGraph(nextPiece.getOccupiedFields());
+                        List<Edge> removedEdges = updateConnectivity
+                                ? removeFieldsFromConnectionGraph(nextPiece.getOccupiedFields())
+                                : null;
+
 
                         int[] diceNumbersOccupied = Board.countDiceNumbersOfFields(nextPiece.getOccupiedFields().stream());
                         updateVisibleDiceNumbers(visibleDiceNumbers, diceNumbersOccupied, false);
 
-                        solveWithCurrentBoard(board, availablePieces, diceOccurrences, visibleDiceNumbers);
+                        solveWithCurrentBoard(board, availablePieces, diceNumbers, visibleDiceNumbers);
 
-                        reinsertFieldsToConnectionGraph(nextPiece.getOccupiedFields(), removedEdges);
+                        if (updateConnectivity) {
+                            reinsertFieldsToConnectionGraph(nextPiece.getOccupiedFields(), removedEdges);
+                        }
 
                         updateVisibleDiceNumbers(visibleDiceNumbers, diceNumbersOccupied, true);
                         board.removeLastPieceFromBoard();
@@ -131,22 +164,80 @@ public class Solver {
         availablePieces.add(0, nextPiece);
     }
 
-    private void reinsertFieldsToConnectionGraph(List<Field> occupiedFields, Stream<Edge> removedEdges) {
-        occupiedFields.forEach(field -> connectionGraph.addNode(field.getId()));
+    private boolean areFieldComponentsCompatible(List<Piece> availablePieces, int[] diceNumbers) {
+        if (connectedFields.getConnectedComponentsCount() == 1) {
+            return true;
+        }
+
+        ConnectedComponent biggestComponent = connectedFields.getGiantComponent();
+
+        int[] fixedDiceNumbers = new int[7];
+        for (ConnectedComponent fieldComponent : connectedFields) {
+            if (fieldComponent == biggestComponent)
+                continue;
+
+            Set<Node> nodes = fieldComponent.getNodeSet();
+            FieldComponentProperty fieldComponentProperty = fieldComponentProperties.computeIfAbsent(nodes,
+                    this::computeFieldComponentProperties);
+
+            Piece currentlySmallestPiece = availablePieces.get(0);
+            boolean potentiallyFillableComponent = fieldComponentProperty.numOccupations >= currentlySmallestPiece.getNumOccupations() &&
+                    fieldComponentProperty.maxDimension >= currentlySmallestPiece.getMaxDimension() &&
+                    fieldComponentProperty.minDimension >= currentlySmallestPiece.getMinDimension();
+
+            if (!potentiallyFillableComponent) {
+                for (int i = 0; i < 7; i++) {
+                    fixedDiceNumbers[i] += fieldComponentProperty.diceNumbers[i];
+                }
+            }
+        }
+
+        for (int i = 0; i < 7; i++) {
+            if (fixedDiceNumbers[i] > diceNumbers[i]) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    private FieldComponentProperty computeFieldComponentProperties(Set<Node> nodes) {
+        List<Field> fields = nodes.stream().map(node -> ((BoardNode) node).getField()).toList();
+        int minRow = fields.stream().mapToInt(Field::getRow).min().orElseThrow();
+        int maxRow = fields.stream().mapToInt(Field::getRow).max().orElseThrow();
+        int minColumn = fields.stream().mapToInt(Field::getColumn).min().orElseThrow();
+        int maxColumn = fields.stream().mapToInt(Field::getColumn).max().orElseThrow();
+
+        int width = maxColumn - minColumn + 1;
+        int height = maxRow - minRow + 1;
+
+        int minDimension = Math.min(width, height);
+        int maxDimension = Math.max(width, height);
+
+        System.out.println(fieldComponentProperties.size());
+
+        return new FieldComponentProperty(fields.size(), minDimension, maxDimension,
+                Board.countDiceNumbersOfFields(fields.stream()));
+    }
+
+    private List<Edge> removeFieldsFromConnectionGraph(List<Field> occupiedFields) {
+        List<Edge> removedEdges = occupiedFields.stream()
+                .flatMap(field -> connectionGraph.getNode(field.getId()).edges())
+                .distinct()
+                .toList();
+
+        occupiedFields.forEach(field -> connectionGraph.removeNode(field.getId()));
+        return removedEdges;
+    }
+
+    private void reinsertFieldsToConnectionGraph(List<Field> occupiedFields, List<Edge> removedEdges) {
+        addFieldsToConnectivityGraph(occupiedFields);
 
         removedEdges.forEach(edge -> {
             String node0Id = edge.getNode0().getId();
             String node1Id = edge.getNode1().getId();
-            connectionGraph.addEdge(node0Id + "-" + node1Id, node0Id, node1Id);
+            String edgeId = node0Id + "-" + node1Id;
+            connectionGraph.addEdge(edgeId, node0Id, node1Id);
         });
-    }
-
-    private Stream<Edge> removeFieldsFromConnectionGraph(List<Field> occupiedFields) {
-        Stream<Edge> removedEdges = occupiedFields.stream()
-                .flatMap(field -> connectionGraph.getNode(field.getId()).edges());
-
-        occupiedFields.forEach(field -> connectionGraph.removeNode(field.getId()));
-        return removedEdges;
     }
 
     private void updateVisibleDiceNumbers(int[] visibleDiceNumbers, int[] diceNumbers, boolean add) {
@@ -178,5 +269,9 @@ public class Solver {
 
     public List<Board> getSolutions() {
         return solutions;
+    }
+
+    private record FieldComponentProperty(int numOccupations, int maxDimension, int minDimension,
+                                          int[] diceNumbers) {
     }
 }

@@ -42,6 +42,7 @@ public class PieceCanvas extends Canvas {
         board.placePieceOnBoard(piece, orientation, pieceRowOffset, pieceColumnOffset);
         orientationIndex = piece.getOrientationIndex();
 
+
         draw(fieldSize);
         setOnMouseClicked(this::rotate);
     }
