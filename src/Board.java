@@ -1,5 +1,4 @@
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.stream.Stream;
@@ -65,9 +64,10 @@ public class Board {
     }
 
     public void placePieceOnBoard(Piece piece, PieceOrientation orientation, int rowOffset, int columnOffset) {
-        var occupiedFields = Arrays.stream(orientation.getPositions())
-                .map(partialPiecePos -> getFieldOnBoard(partialPiecePos.row() + rowOffset, partialPiecePos.column() + columnOffset))
-                .toList();
+        List<Field> occupiedFields = new ArrayList<>();
+        for(FieldPosition partialPiecePos : orientation.getPositions()) {
+            occupiedFields.add( getFieldOnBoard(partialPiecePos.row() + rowOffset, partialPiecePos.column() + columnOffset));
+        }
 
         occupiedFields.forEach(field -> field.setOccupationPiece(piece));
         piece.setRowOffsetOnBoard(rowOffset);

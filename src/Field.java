@@ -48,4 +48,9 @@ public class Field {
     public String getId() {
         return id;
     }
+
+    @Override
+    public String toString() {
+        return position.toString();
+    }
 }
