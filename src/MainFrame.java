@@ -64,9 +64,8 @@ public class MainFrame extends Application {
     private int floatingPieceOffsetY;
 
     private int dragPieceId;
-
     private PieceOrientation dragPieceOrientation;
-
+    private Field dragFieldOrigin;
     private Field dragFieldToBePlaced;
 
 
@@ -86,7 +85,8 @@ public class MainFrame extends Application {
             int offsetY = (int) (mouseEvent.getY() - minField.getTopLeftCornerYCoordinate());
 
             board.removePieceFromBoard(draggedPiece);
-            fixedPiecesOnBoard.remove(draggedPiece);
+            dragFieldOrigin = minField;
+
             addFloatingPieceView(draggedPiece, offsetX, offsetY);
             drawBoard();
             canvas.startFullDrag();
@@ -148,15 +148,28 @@ public class MainFrame extends Application {
     }
 
     private void dragPieceRelease(MouseDragEvent event) {
-        if (dragFieldToBePlaced != null) {
-            Piece pieceToPlace = board.getAllPieces().get(dragPieceId);
+        Piece pieceToPlace = board.getAllPieces().get(dragPieceId);
+        if (dragFieldToBePlaced != null) { // can place piece at position
             board.placePieceOnBoard(pieceToPlace, dragPieceOrientation,
                     dragFieldToBePlaced.getRow(), dragFieldToBePlaced.getColumn());
-            updatePieces();
+            if (dragFieldToBePlaced == dragFieldOrigin) {
+                updatePieceSidebar();
+                drawBoard();
+            } else {
+                removeDragPiece(pieceToPlace);
+            }
         }
-        updatePieceSidebar();
+        if (dragFieldOrigin != null) { // piece got removed from position
+            removeDragPiece(pieceToPlace);
+        }
+
         rootPane.getChildren().remove(floatingPieceCanvas);
         event.consume();
+    }
+
+    private void removeDragPiece(Piece pieceToPlace) {
+        fixedPiecesOnBoard.remove(pieceToPlace);
+        updatePiecesAndResetSolution();
     }
 
     private void initFloatingPieceViewHandler() {
@@ -166,7 +179,7 @@ public class MainFrame extends Application {
 
     }
 
-    private void updatePieces() {
+    private void updatePiecesAndResetSolution() {
         updatePieceSidebar();
         resetSolutionObjects();
         drawBoard();
@@ -229,7 +242,7 @@ public class MainFrame extends Application {
     private void resetBoard() {
         board.reset();
         fixedPiecesOnBoard.clear();
-        updatePieces();
+        updatePiecesAndResetSolution();
     }
 
     private void solveBoard() {
@@ -288,7 +301,7 @@ public class MainFrame extends Application {
             Piece occupationPiece = clickedField.getOccupationPiece();
             fixedPiecesOnBoard.remove(occupationPiece);
             board.removePieceFromBoard(occupationPiece);
-            updatePieces();
+            updatePiecesAndResetSolution();
         }
     }
 
@@ -385,7 +398,7 @@ public class MainFrame extends Application {
     }
 
     private void initCanvas() {
-        updatePieces();
+        updatePiecesAndResetSolution();
         canvas.setOnMouseClicked(this::canvasOnClicked);
         canvas.setOnDragDetected(this::startPieceDragOnBoard);
     }

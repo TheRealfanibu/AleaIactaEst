@@ -18,7 +18,7 @@ public class Solver {
 
     private final boolean searchOnlyOneSolution;
 
-    private static final int CONNECTIVITY_CHECK_AT_PIECE = 4;
+    private static final int CONNECTIVITY_CHECK_AT_PIECE = 3;
 
     private final Graph connectionGraph;
 
