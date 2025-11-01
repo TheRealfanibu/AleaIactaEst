@@ -17,11 +17,16 @@ public class Dice extends Canvas {
 
     public static final Color BACKGROUND_COLOR = Color.BEIGE;
 
+    public static final Color[] FIXED_COLORS =
+            {Color.GREENYELLOW, Color.MAGENTA, Color.ORANGE, Color.CYAN, Color.YELLOW, Color.CRIMSON};
+
     private int number;
 
     private long lastEvent;
 
     private final MainFrame mainFrame;
+
+    private Field fixedField;
 
     public Dice(MainFrame mainFrame, int number) {
         super(MainFrame.FIELD_SIZE, MainFrame.FIELD_SIZE);
@@ -37,6 +42,12 @@ public class Dice extends Canvas {
             return;
         }
 
+        if (fixedField != null) {
+            fixedField.setFixedDice(null);
+            fixedField = null;
+            mainFrame.drawBoard();
+        }
+
         lastEvent = System.currentTimeMillis();
         if(mouseEvent.getButton() == MouseButton.PRIMARY) {
             if (++number > 6) {
@@ -47,13 +58,14 @@ public class Dice extends Canvas {
                 number = 6;
             }
         }
+
         draw();
         mainFrame.resetSolutionObjects();
     }
 
-    private void draw() {
+    public void draw() {
         GraphicsContext graphics = getGraphicsContext2D();
-        graphics.setFill(BACKGROUND_COLOR);
+        graphics.setFill(isFixed() ? FIXED_COLORS[number - 1] : BACKGROUND_COLOR);
         graphics.fillRect(0,0, FIELD_SIZE, FIELD_SIZE);
         graphics.setStroke(Color.BLACK);
         graphics.setLineWidth(2);
@@ -95,5 +107,17 @@ public class Dice extends Canvas {
 
     public int getNumber() {
         return number;
+    }
+
+    public boolean isFixed() {
+        return fixedField != null;
+    }
+
+    public void setFixedField(Field fixedField) {
+        this.fixedField = fixedField;
+    }
+
+    public Field getFixedField() {
+        return fixedField;
     }
 }

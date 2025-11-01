@@ -22,10 +22,7 @@ import javafx.scene.paint.Color;
 import javafx.scene.text.Font;
 import javafx.stage.Stage;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Objects;
+import java.util.*;
 import java.util.function.ToIntFunction;
 
 public class MainFrame extends Application {
@@ -270,14 +267,57 @@ public class MainFrame extends Application {
 
 
     private void canvasOnClicked(MouseEvent mouseEvent) {
-        if (mouseEvent.getButton() == MouseButton.SECONDARY) {
+        if (mouseEvent.getButton() == MouseButton.PRIMARY) {
+            selectFixedDicePosition(mouseEvent.getX(), mouseEvent.getY());
+        } else if (mouseEvent.getButton() == MouseButton.SECONDARY) {
             removePiece(mouseEvent.getX(), mouseEvent.getY());
         }
     }
 
-    private synchronized void drawBoard() {
+    private void selectFixedDicePosition(double mouseX, double mouseY) {
+        int row = (int) (mouseY / FIELD_SIZE);
+        int column = (int)  (mouseX / FIELD_SIZE);
+
+        Field field = board.getFieldOnBoard(row, column);
+        if (!field.isOccupied()) {
+            boolean diceChange = false;
+            Dice alteredDice = null;
+
+            if (field.isDiceFixed()) {
+                alteredDice = field.getFixedDice();
+                alteredDice.setFixedField(null);
+                field.setFixedDice(null);
+                diceChange = true;
+            } else {
+                Optional<Dice> optUnfixedDice = Arrays.stream(dices)
+                        .filter(dice -> dice.getNumber() == field.getNumber() && !dice.isFixed())
+                        .findFirst();
+
+                if(optUnfixedDice.isPresent()) {
+                    alteredDice = optUnfixedDice.get();
+                    alteredDice.setFixedField(field);
+                    field.setFixedDice(alteredDice);
+                    diceChange = true;
+                }
+            }
+
+            if (diceChange) {
+                alteredDice.draw();
+                drawBoard();
+                resetSolutionObjects();
+            }
+        }
+    }
+
+
+    public synchronized void drawBoard() {
         graphics.setFill(Dice.BACKGROUND_COLOR);
         graphics.fillRect(0, 0, CANVAS_SIZE, CANVAS_SIZE);
+
+        board.getAllFields().stream()
+                .filter(field -> !field.isOccupied())
+                .forEach(this::drawField);
+
         graphics.setStroke(Color.BLACK);
         graphics.setLineWidth(10);
         graphics.strokeRect(0, 0, CANVAS_SIZE, CANVAS_SIZE);
@@ -289,7 +329,7 @@ public class MainFrame extends Application {
             graphics.strokeLine(0, i * FIELD_SIZE, CANVAS_SIZE, i * FIELD_SIZE);
         }
 
-        drawPiecesAndNumbers();
+        board.getPiecesOnBoard().forEach(piece -> piece.drawPiece(graphics, fixedPiecesOnBoard));
     }
 
     private void removePiece(double mouseX, double mouseY) {
@@ -305,21 +345,18 @@ public class MainFrame extends Application {
         }
     }
 
-    private void drawPiecesAndNumbers() {
-        board.getPiecesOnBoard().forEach(piece -> piece.drawPiece(graphics, fixedPiecesOnBoard));
-        board.getAllFields().stream()
-                .filter(field -> !field.isOccupied())
-                .forEach(this::drawField);
-    }
-
     private void drawField(Field field) {
-        if (field.getNumber() == 0)
-            return;
-
         int xOffset = field.getTopLeftCornerXCoordinate();
         int yOffset = field.getTopLeftCornerYCoordinate();
 
-        Dice.drawNumber(graphics, field.getNumber(), xOffset, yOffset);
+        if(field.isDiceFixed()) {
+            graphics.setFill(Dice.FIXED_COLORS[field.getNumber() - 1]);
+            graphics.fillRect(xOffset, yOffset, FIELD_SIZE, FIELD_SIZE);
+        }
+
+        if(field.getNumber() != 0) {
+            Dice.drawNumber(graphics, field.getNumber(), xOffset, yOffset);
+        }
     }
 
     private Pane createDicePane() {

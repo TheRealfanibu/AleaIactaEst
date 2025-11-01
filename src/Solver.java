@@ -240,8 +240,7 @@ public class Solver {
                 .filter(piece -> doesPieceFitIntoComponent(board, piece, width, height, minRow, minColumn))
                 .toList();
 
-        return new FieldComponentProperty(fields.size(), fittablePieces,
-                Board.countDiceNumbersOfFields(fields.stream()));
+        return new FieldComponentProperty(fittablePieces, Board.countDiceNumbersOfFields(fields.stream()));
     }
 
     private void updateVisibleDiceNumbers(int[] visibleDiceNumbers, int[] diceNumbers, boolean add) {
@@ -275,7 +274,7 @@ public class Solver {
         return solutions;
     }
 
-    private record FieldComponentProperty(int numOccupations, List<Piece> fittablePieces, int[] diceNumbers) {
+    private record FieldComponentProperty(List<Piece> fittablePieces, int[] diceNumbers) {
 
     }
 }

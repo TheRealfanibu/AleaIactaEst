@@ -7,6 +7,8 @@ public class Field {
 
     private final String id;
 
+    private Dice fixedDice;
+
     public Field(int row, int column, int number) {
         this.number = number;
         position = new FieldPosition(row, column);
@@ -47,6 +49,18 @@ public class Field {
 
     public String getId() {
         return id;
+    }
+
+    public boolean isDiceFixed() {
+        return fixedDice != null;
+    }
+
+    public void setFixedDice(Dice fixedDice) {
+        this.fixedDice = fixedDice;
+    }
+
+    public Dice getFixedDice() {
+        return fixedDice;
     }
 
     @Override
