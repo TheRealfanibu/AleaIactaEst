@@ -144,7 +144,7 @@ public class Solver {
         int numPiecesOnBoard = board.getPiecesOnBoard().size();
         if (numPiecesOnBoard == CONNECTIVITY_CHECK_AT_PIECE) {
             initConnectivityGraph(board);
-            boolean fieldComponentsCompatible = areFieldComponentsCompatible(availablePieces, diceNumbers);
+            boolean fieldComponentsCompatible = areFieldComponentsCompatible(board, availablePieces, diceNumbers);
             connectedFields.terminate();
             if (fieldComponentsCompatible) {
                 notPrunedTreesCounter++;
@@ -179,7 +179,7 @@ public class Solver {
         availablePieces.add(0, nextPiece);
     }
 
-    private boolean areFieldComponentsCompatible(List<Piece> availablePieces, int[] diceNumbers) {
+    private boolean areFieldComponentsCompatible(Board board, List<Piece> availablePieces, int[] diceNumbers) {
         connectedFields = new ConnectedComponents(connectionGraph);
         if (connectedFields.getConnectedComponentsCount() == 1) {
             return true;
@@ -193,18 +193,15 @@ public class Solver {
                 continue;
 
             Set<Node> nodes = fieldComponent.getNodeSet();
-            FieldComponentProperty fieldComponentProperty = fieldComponentProperties.computeIfAbsent(nodes,
-                    this::computeFieldComponentProperties);
+            FieldComponentProperty fcp = fieldComponentProperties.computeIfAbsent(nodes,
+                    nodes1 -> computeFieldComponentProperties(board, nodes1));
 
-            boolean potentiallyFillableComponent = availablePieces.stream().anyMatch(piece ->
-                    fieldComponentProperty.numOccupations >= piece.getNumOccupations() &&
-                            fieldComponentProperty.maxDimension >= piece.getMaxDimension() &&
-                            fieldComponentProperty.minDimension >= piece.getMinDimension());
+            boolean fittable = fcp.fittablePieces.stream()
+                    .anyMatch(availablePieces::contains);
 
-
-            if (!potentiallyFillableComponent) {
+            if (!fittable) {
                 for (int i = 0; i < Board.DIM; i++) {
-                    fixedDiceNumbers[i] += fieldComponentProperty.diceNumbers[i];
+                    fixedDiceNumbers[i] += fcp.diceNumbers[i];
                     if (fixedDiceNumbers[i] > diceNumbers[i]) {
                         return false;
                     }
@@ -214,7 +211,22 @@ public class Solver {
         return true;
     }
 
-    private FieldComponentProperty computeFieldComponentProperties(Set<Node> nodes) {
+    private boolean doesPieceFitIntoComponent(Board board, Piece piece,
+                                              int width, int height, int startRow, int startColumn) {
+        for (PieceOrientation orientation : piece.getOrientations()) {
+            for (int rowOffset = 0; rowOffset <= height - orientation.getHeight(); rowOffset++) {
+                for (int columnOffset = 0; columnOffset <= width - orientation.getWidth(); columnOffset++) {
+                    if (board.fitsInPlace(orientation,
+                            startRow + rowOffset, startColumn + columnOffset)) {
+                        return true;
+                    }
+                }
+            }
+        }
+        return false;
+    }
+
+    private FieldComponentProperty computeFieldComponentProperties(Board board, Set<Node> nodes) {
         List<Field> fields = nodes.stream().map(node -> ((BoardNode) node).getField()).toList();
         int minRow = fields.stream().mapToInt(Field::getRow).min().orElseThrow();
         int maxRow = fields.stream().mapToInt(Field::getRow).max().orElseThrow();
@@ -224,10 +236,11 @@ public class Solver {
         int width = maxColumn - minColumn + 1;
         int height = maxRow - minRow + 1;
 
-        int minDimension = Math.min(width, height);
-        int maxDimension = Math.max(width, height);
+        List<Piece> fittablePieces = board.getAllPieces().stream()
+                .filter(piece -> doesPieceFitIntoComponent(board, piece, width, height, minRow, minColumn))
+                .toList();
 
-        return new FieldComponentProperty(fields.size(), minDimension, maxDimension,
+        return new FieldComponentProperty(fields.size(), fittablePieces,
                 Board.countDiceNumbersOfFields(fields.stream()));
     }
 
@@ -262,8 +275,7 @@ public class Solver {
         return solutions;
     }
 
-    private record FieldComponentProperty(int numOccupations, int minDimension, int maxDimension,
-                                          int[] diceNumbers) {
+    private record FieldComponentProperty(int numOccupations, List<Piece> fittablePieces, int[] diceNumbers) {
 
     }
 }
