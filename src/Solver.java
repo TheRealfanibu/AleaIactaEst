@@ -46,6 +46,8 @@ public class Solver {
     }
 
     public void solve(Board board, List<Integer> diceNumbers) {
+        long startTime = System.currentTimeMillis();
+
         prunedTreesCounter = 0;
         notPrunedTreesCounter = 0;
 
@@ -78,6 +80,7 @@ public class Solver {
             System.out.println("total trees pruned: " + prunedTreesCounter);
         }
         System.out.println("field components computed: " + fieldComponentProperties.size());
+        System.out.println("Solving took: " + (System.currentTimeMillis() - startTime) / 1000d + "s");
     }
 
     public void initConnectivityGraph(Board board) {
