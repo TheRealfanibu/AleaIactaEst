@@ -46,7 +46,6 @@ public class Solver {
     }
 
     public void solve(Board board, List<Integer> diceNumbers) {
-
         prunedTreesCounter = 0;
         notPrunedTreesCounter = 0;
 
@@ -154,8 +153,8 @@ public class Solver {
 
         Piece nextPiece = availablePieces.remove(0);
         for (PieceOrientation orientation : nextPiece.getOrientations()) {
-            for (int rowOffset = 0; rowOffset <= 7 - orientation.getHeight(); rowOffset++) {
-                for (int columnOffset = 0; columnOffset <= 7 - orientation.getWidth(); columnOffset++) {
+            for (int rowOffset = 0; rowOffset <= Board.DIM - orientation.getHeight(); rowOffset++) {
+                for (int columnOffset = 0; columnOffset <= Board.DIM - orientation.getWidth(); columnOffset++) {
                     if (!solving) {
                         return;
                     }
@@ -185,7 +184,7 @@ public class Solver {
 
         ConnectedComponent biggestComponent = connectedFields.getGiantComponent();
 
-        int[] fixedDiceNumbers = new int[7];
+        int[] fixedDiceNumbers = new int[Board.DIM];
         for (ConnectedComponent fieldComponent : connectedFields) {
             if (fieldComponent.getNodeCount() >= biggestComponent.getNodeCount())
                 continue;
@@ -201,7 +200,7 @@ public class Solver {
 
 
             if (!potentiallyFillableComponent) {
-                for (int i = 0; i < 7; i++) {
+                for (int i = 0; i < Board.DIM; i++) {
                     fixedDiceNumbers[i] += fieldComponentProperty.diceNumbers[i];
                     if (fixedDiceNumbers[i] > diceNumbers[i]) {
                         return false;
@@ -230,7 +229,7 @@ public class Solver {
     }
 
     private void updateVisibleDiceNumbers(int[] visibleDiceNumbers, int[] diceNumbers, boolean add) {
-        for (int diceNumber = 0; diceNumber < 7; diceNumber++) {
+        for (int diceNumber = 0; diceNumber < Board.DIM; diceNumber++) {
             if (add) {
                 visibleDiceNumbers[diceNumber] += diceNumbers[diceNumber];
             } else {
@@ -240,7 +239,7 @@ public class Solver {
     }
 
     private boolean areEnoughSolutionDiceNumbersAvailable(int[] diceOccurrences, int[] visibleDiceNumbers) {
-        for (int diceNumber = 0; diceNumber < 7; diceNumber++) {
+        for (int diceNumber = 0; diceNumber < Board.DIM; diceNumber++) {
             if (visibleDiceNumbers[diceNumber] < diceOccurrences[diceNumber]) { // too many number fields occupied
                 return false;
             }

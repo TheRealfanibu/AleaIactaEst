@@ -32,7 +32,7 @@ public class MainFrame extends Application {
 
     public static final int FIELD_SIZE = 80;
 
-    private static final int CANVAS_SIZE = 7 * FIELD_SIZE;
+    private static final int CANVAS_SIZE = Board.DIM * FIELD_SIZE;
 
     private Pane rootPane;
 
@@ -282,10 +282,10 @@ public class MainFrame extends Application {
         graphics.setLineWidth(10);
         graphics.strokeRect(0, 0, CANVAS_SIZE, CANVAS_SIZE);
         graphics.setLineWidth(1);
-        for (int i = 1; i < 7; i++) {
+        for (int i = 1; i < Board.DIM; i++) {
             graphics.strokeLine(i * FIELD_SIZE, 0, i * FIELD_SIZE, CANVAS_SIZE);
         }
-        for (int i = 1; i < 7; i++) {
+        for (int i = 1; i < Board.DIM; i++) {
             graphics.strokeLine(0, i * FIELD_SIZE, CANVAS_SIZE, i * FIELD_SIZE);
         }
 

@@ -10,7 +10,7 @@ public class Field {
     public Field(int row, int column, int number) {
         this.number = number;
         position = new FieldPosition(row, column);
-        id = String.valueOf(row * 7 + column);
+        id = String.valueOf(row * Board.DIM + column);
     }
 
     public int getTopLeftCornerXCoordinate() {

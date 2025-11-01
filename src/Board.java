@@ -15,7 +15,9 @@ public class Board {
             {5,0,6,4,3,1,2},
             {2,1,5,0,4,3,6}
     };
-
+    
+    public static final int DIM = NUMBERS.length; // on normal board = 7
+    
 //    private static final int[][] NUMBERS = { // example board with solutions for all dice combinations
 //            {2,0,5,1,6,3,4},
 //            {1,5,4,3,0,6,2},
@@ -33,7 +35,7 @@ public class Board {
     private final List<Piece> piecesOnBoard = new LinkedList<>();
 
     public Board() {
-        boardFields = new Field[7][7];
+        boardFields = new Field[DIM][DIM];
         allFields = new LinkedList<>();
 
         initField();
@@ -58,13 +60,13 @@ public class Board {
     }
 
     public static int[] countDiceNumbers(Stream<Integer> numbers) {
-        int[] diceNumbers = new int[7];
+        int[] diceNumbers = new int[DIM];
         numbers.forEach(number -> diceNumbers[number]++);
         return diceNumbers;
     }
 
     public void placePieceOnBoard(Piece piece, PieceOrientation orientation, int rowOffset, int columnOffset) {
-        List<Field> occupiedFields = new ArrayList<>();
+        List<Field> occupiedFields = new ArrayList<>(piece.getNumOccupations());
         for(FieldPosition partialPiecePos : orientation.getPositions()) {
             occupiedFields.add( getFieldOnBoard(partialPiecePos.row() + rowOffset, partialPiecePos.column() + columnOffset));
         }
@@ -95,8 +97,8 @@ public class Board {
 
 
     private void initField() {
-        for (int i = 0; i < 7; i++) {
-            for (int j = 0; j < 7; j++) {
+        for (int i = 0; i < DIM; i++) {
+            for (int j = 0; j < DIM; j++) {
                 Field field = new Field(i, j, NUMBERS[i][j]);
                 boardFields[i][j] = field;
                 allFields.add(field);
