@@ -238,6 +238,7 @@ public class MainFrame extends Application {
     private void resetBoard() {
         board.reset();
         fixedPiecesOnBoard.clear();
+        Arrays.stream(dices).forEach(Dice::draw);
         updatePiecesAndResetSolution();
     }
 
@@ -284,7 +285,7 @@ public class MainFrame extends Application {
 
             if (field.isDiceFixed()) {
                 alteredDice = field.getFixedDice();
-                board.removeFixedDice(alteredDice, field);
+                board.removeFixedDice(alteredDice, field, true);
                 diceChange = true;
             } else {
                 Optional<Dice> optUnfixedDice = Arrays.stream(dices)
@@ -467,6 +468,7 @@ public class MainFrame extends Application {
 
         Scene scene = new Scene(rootPane);
 
+        stage.setTitle("Alea Iacta Est");
         stage.setScene(scene);
         stage.show();
     }

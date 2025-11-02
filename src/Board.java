@@ -47,10 +47,12 @@ public class Board {
         fixedFields.add(field);
     }
 
-    public void removeFixedDice(Dice dice, Field field) {
+    public void removeFixedDice(Dice dice, Field field, boolean remove) {
         dice.setFixedField(null);
         field.setFixedDice(null);
-        fixedFields.remove(field);
+        if(remove) {
+            fixedFields.remove(field);
+        }
     }
 
     public Stream<Field> getFieldsNotOccupiedByPiece() {
@@ -106,7 +108,6 @@ public class Board {
 
     private void removePieceFieldInfo(Piece piece) {
         piece.getOccupiedFields().forEach(field -> field.setOccupationPiece(null));
-        //piece.setOccupiedFields(null);
     }
 
 
@@ -123,6 +124,8 @@ public class Board {
     public void reset() {
         piecesOnBoard.forEach(this::removePieceFieldInfo);
         piecesOnBoard.clear();
+        fixedFields.forEach(field -> removeFixedDice(field.getFixedDice(), field, false));
+        fixedFields.clear();
     }
 
     public List<Piece> getPiecesOnBoard() {
@@ -137,10 +140,6 @@ public class Board {
 
     public Field getFieldOnBoard(int row, int column) {
         return boardFields[row][column];
-    }
-
-    public List<Field> getAllFields() {
-        return allFields;
     }
 
     public List<Piece> getAllPieces() {

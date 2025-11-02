@@ -94,12 +94,6 @@ public class Solver {
 
     }
 
-    private void displayGraph() {
-        System.setProperty("org.graphstream.ui", "swing");
-        connectionGraph.display();
-        System.out.println(connectedFields.getConnectedComponentsCount());
-    }
-
     private void addFieldsToConnectivityGraph(List<Field> fields) {
         fields.forEach(field -> {
             BoardNode node = (BoardNode) connectionGraph.addNode(field.getId());
