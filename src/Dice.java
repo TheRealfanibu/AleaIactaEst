@@ -17,8 +17,8 @@ public class Dice extends Canvas {
 
     public static final Color BACKGROUND_COLOR = Color.BEIGE;
 
-    public static final Color[] FIXED_COLORS =
-            {Color.GREENYELLOW, Color.MAGENTA, Color.ORANGE, Color.CYAN, Color.YELLOW, Color.CRIMSON};
+    private static final Color[] FIXED_COLORS =
+            {Color.DARKGREEN, Color.GREENYELLOW, Color.MAGENTA, Color.ORANGE, Color.CYAN, Color.YELLOW, Color.CRIMSON};
 
     private int number;
 
@@ -64,7 +64,7 @@ public class Dice extends Canvas {
 
     public void draw() {
         GraphicsContext graphics = getGraphicsContext2D();
-        graphics.setFill(isFieldFixed() ? FIXED_COLORS[number - 1] : BACKGROUND_COLOR);
+        graphics.setFill(isFieldFixed() ? getFixedDiceFillColor(number) : BACKGROUND_COLOR);
         graphics.fillRect(0,0, FIELD_SIZE, FIELD_SIZE);
         graphics.setStroke(Color.BLACK);
         graphics.setLineWidth(2);
@@ -102,6 +102,10 @@ public class Dice extends Canvas {
                     yOffset + FIELD_SIZE_HALF - DICE_CIRCLE_SIZE_HALF,
                     DICE_CIRCLE_SIZE, DICE_CIRCLE_SIZE);
         }
+    }
+
+    public static Color getFixedDiceFillColor(int number) {
+        return FIXED_COLORS[number];
     }
 
     public int getNumber() {

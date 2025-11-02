@@ -7,17 +7,17 @@ public class Board {
 
 
     private static final int[][] NUMBERS = { // original board (no solution for 6x2)
-            {1,5,4,3,2,6,0},
-            {0,3,1,2,6,4,5},
-            {6,2,3,5,1,0,4},
-            {3,4,2,6,0,5,1},
-            {4,6,0,1,5,2,3},
-            {5,0,6,4,3,1,2},
-            {2,1,5,0,4,3,6}
+            {1, 5, 4, 3, 2, 6, 0},
+            {0, 3, 1, 2, 6, 4, 5},
+            {6, 2, 3, 5, 1, 0, 4},
+            {3, 4, 2, 6, 0, 5, 1},
+            {4, 6, 0, 1, 5, 2, 3},
+            {5, 0, 6, 4, 3, 1, 2},
+            {2, 1, 5, 0, 4, 3, 6}
     };
-    
+
     public static final int DIM = NUMBERS.length; // on normal board = 7
-    
+
 //    private static final int[][] NUMBERS = { // example board with solutions for all dice combinations
 //            {2,0,5,1,6,3,4},
 //            {1,5,4,3,0,6,2},
@@ -28,23 +28,37 @@ public class Board {
 //            {6,2,1,0,4,5,3},
 //    };
 
-    private final Field[][] boardFields;
-    private final List<Field> allFields;
+    private final Field[][] boardFields = new Field[DIM][DIM];
+    private final List<Field> allFields = new LinkedList<>();
+    private final List<Field> fixedFields = new LinkedList<>();
 
     private final List<Piece> allPieces = PieceCollection.createPieceInstances();
     private final List<Piece> piecesOnBoard = new LinkedList<>();
 
     public Board() {
-        boardFields = new Field[DIM][DIM];
-        allFields = new LinkedList<>();
-
         initField();
 
         allPieces.forEach(piece -> piece.setBoard(this));
     }
 
-    public List<Field> getUnoccupiedFields() {
-        return allFields.stream().filter(field -> !field.isOccupied()).toList();
+    public void addFixedDice(Dice dice, Field field) {
+        dice.setFixedField(field);
+        field.setFixedDice(dice);
+        fixedFields.add(field);
+    }
+
+    public void removeFixedDice(Dice dice, Field field) {
+        dice.setFixedField(null);
+        field.setFixedDice(null);
+        fixedFields.remove(field);
+    }
+
+    public Stream<Field> getFieldsNotOccupiedByPiece() {
+        return allFields.stream().filter(field -> !field.isOccupiedByPiece());
+    }
+
+    public Stream<Field> getUnoccupiedFields() {
+        return allFields.stream().filter(field -> !field.isOccupied());
     }
 
     public static boolean isOutOfBounds(int row, int column) {
@@ -52,7 +66,7 @@ public class Board {
     }
 
     public int[] countVisibleDiceNumbers() {
-        return countDiceNumbersOfFields(allFields.stream().filter(field -> !field.isOccupiedByPiece()));
+        return countDiceNumbersOfFields(getFieldsNotOccupiedByPiece());
     }
 
     public static int[] countDiceNumbersOfFields(Stream<Field> fieldStream) {
@@ -67,8 +81,8 @@ public class Board {
 
     public void placePieceOnBoard(Piece piece, PieceOrientation orientation, int rowOffset, int columnOffset) {
         List<Field> occupiedFields = new ArrayList<>(piece.getNumOccupations());
-        for(FieldPosition partialPiecePos : orientation.getPositions()) {
-            occupiedFields.add( getFieldOnBoard(partialPiecePos.row() + rowOffset, partialPiecePos.column() + columnOffset));
+        for (FieldPosition partialPiecePos : orientation.getPositions()) {
+            occupiedFields.add(getFieldOnBoard(partialPiecePos.row() + rowOffset, partialPiecePos.column() + columnOffset));
         }
 
         occupiedFields.forEach(field -> field.setOccupationPiece(piece));
@@ -140,14 +154,13 @@ public class Board {
             copyBoard.placePieceOnBoard(copyPiece, piece.getOrientationOnBoard(),
                     piece.getRowOffsetOnBoard(), piece.getColumnOffsetOnBoard());
         }
-        allFields.stream().filter(Field::isDiceFixed)
-                .forEach(field -> copyBoard.getFieldOnBoard(field.getRow(), field.getColumn())
-                        .setFixedDice(field.getFixedDice()));
+        fixedFields.forEach(field -> copyBoard.addFixedDice(field.getFixedDice(),
+                copyBoard.getFieldOnBoard(field.getRow(), field.getColumn())));
         return copyBoard;
     }
 
     public boolean fitsInPlace(PieceOrientation orientation, int rowOffset, int columnOffset) {
-        for(FieldPosition pieceField : orientation.getPositions()) {
+        for (FieldPosition pieceField : orientation.getPositions()) {
             int row = pieceField.row() + rowOffset;
             int column = pieceField.column() + columnOffset;
             if (isOutOfBounds(row, column) || getFieldOnBoard(row, column).isOccupied()) {

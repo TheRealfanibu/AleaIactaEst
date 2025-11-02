@@ -40,7 +40,7 @@ public class SolutionChecker {
 
     private void checkSolution(int[] dices) {
         List<Integer> diceList = Arrays.stream(dices).boxed().toList();
-        solver.solve(board, diceList);
+        solver.solve(board, diceList, List.of());
         if (solver.getSolutions().isEmpty()) {
             System.err.println(diceList + ": No solution found!");
         } else {

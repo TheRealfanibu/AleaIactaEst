@@ -36,7 +36,7 @@ public class MainFrame extends Application {
     private final Canvas canvas = new Canvas(CANVAS_SIZE, CANVAS_SIZE);
     private final GraphicsContext graphics = canvas.getGraphicsContext2D();
 
-    private final Dice[] dices = new Dice[6];
+    private final Dice[] dices = new Dice[Board.DIM];
     private Board board = new Board();
 
     private final PieceSidebar pieceSidebar = new PieceSidebar(this);
@@ -68,11 +68,10 @@ public class MainFrame extends Application {
 
     private void startPieceDragOnBoard(MouseEvent mouseEvent) {
         int row = (int) (mouseEvent.getY() / FIELD_SIZE);
-        int column =  (int) (mouseEvent.getX() / FIELD_SIZE);
-        System.out.println(row + " " + column);
+        int column = (int) (mouseEvent.getX() / FIELD_SIZE);
 
         Field draggedField = board.getFieldOnBoard(row, column);
-        if(draggedField.isOccupiedByPiece()) {
+        if (draggedField.isOccupiedByPiece()) {
             Piece draggedPiece = draggedField.getOccupationPiece();
 
             int minPieceRow = getMinAttributeField(draggedPiece.getOccupiedFields(), Field::getRow);
@@ -249,8 +248,8 @@ public class MainFrame extends Application {
         solveButton.setText("Solving...");
 
         List<Integer> diceNumbers = Arrays.stream(dices).map(Dice::getNumber).toList();
-        new Thread(() -> solver.solve(board, diceNumbers)).start();
-        //new Thread(() -> solver.initConnectionGraph(board)).start();
+        List<Integer> fixedDiceNumbers = Arrays.stream(dices).filter(Dice::isFieldFixed).map(Dice::getNumber).toList();
+        new Thread(() -> solver.solve(board, diceNumbers, fixedDiceNumbers)).start();
     }
 
     public void resetSolutionObjects() {
@@ -276,7 +275,7 @@ public class MainFrame extends Application {
 
     private void selectFixedDicePosition(double mouseX, double mouseY) {
         int row = (int) (mouseY / FIELD_SIZE);
-        int column = (int)  (mouseX / FIELD_SIZE);
+        int column = (int) (mouseX / FIELD_SIZE);
 
         Field field = board.getFieldOnBoard(row, column);
         if (!field.isOccupiedByPiece()) {
@@ -285,18 +284,16 @@ public class MainFrame extends Application {
 
             if (field.isDiceFixed()) {
                 alteredDice = field.getFixedDice();
-                alteredDice.setFixedField(null);
-                field.setFixedDice(null);
+                board.removeFixedDice(alteredDice, field);
                 diceChange = true;
             } else {
                 Optional<Dice> optUnfixedDice = Arrays.stream(dices)
                         .filter(dice -> dice.getNumber() == field.getNumber() && !dice.isFieldFixed())
                         .findFirst();
 
-                if(optUnfixedDice.isPresent()) {
+                if (optUnfixedDice.isPresent()) {
                     alteredDice = optUnfixedDice.get();
-                    alteredDice.setFixedField(field);
-                    field.setFixedDice(alteredDice);
+                    board.addFixedDice(alteredDice, field);
                     diceChange = true;
                 }
             }
@@ -319,9 +316,7 @@ public class MainFrame extends Application {
         graphics.setFill(Dice.BACKGROUND_COLOR);
         graphics.fillRect(0, 0, CANVAS_SIZE, CANVAS_SIZE);
 
-        board.getAllFields().stream()
-                .filter(field -> !field.isOccupiedByPiece())
-                .forEach(this::drawField);
+        board.getFieldsNotOccupiedByPiece().forEach(this::drawField);
 
         graphics.setStroke(Color.BLACK);
         graphics.setLineWidth(10);
@@ -354,12 +349,12 @@ public class MainFrame extends Application {
         int xOffset = field.getTopLeftCornerXCoordinate();
         int yOffset = field.getTopLeftCornerYCoordinate();
 
-        if(field.isDiceFixed()) {
-            graphics.setFill(Dice.FIXED_COLORS[field.getNumber() - 1]);
+        if (field.isDiceFixed()) {
+            graphics.setFill(Dice.getFixedDiceFillColor(field.getNumber()));
             graphics.fillRect(xOffset, yOffset, FIELD_SIZE, FIELD_SIZE);
         }
 
-        if(field.getNumber() != 0) {
+        if (field.getNumber() != 0) {
             Dice.drawNumber(graphics, field.getNumber(), xOffset, yOffset);
         }
     }
@@ -367,16 +362,17 @@ public class MainFrame extends Application {
     private Pane createDicePane() {
         VBox vBox = new VBox(30);
         vBox.setAlignment(Pos.TOP_CENTER);
-        for (int i = 0; i < 6; i++) {
-            dices[i] = new Dice(this, i + 1);
-            vBox.getChildren().add(dices[i]);
+        for (int i = 0; i < dices.length; i++) {
+            dices[i] = new Dice(this, i);
+            if (i > 0) { // dice for empty field is fixed
+                vBox.getChildren().add(dices[i]);
+            }
         }
 
         return vBox;
     }
 
     private Pane createButtonBox() {
-
 
 
         Font buttonFont = Font.font(20);

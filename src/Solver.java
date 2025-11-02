@@ -45,7 +45,7 @@ public class Solver {
         connectionGraph.setNodeFactory((id, graph) -> new BoardNode((AbstractGraph) graph, id));
     }
 
-    public void solve(Board board, List<Integer> diceNumbers) {
+    public void solve(Board board, List<Integer> diceNumbers, List<Integer> fixedDiceNumbers) {
         long startTime = System.currentTimeMillis();
 
         prunedTreesCounter = 0;
@@ -55,22 +55,19 @@ public class Solver {
         solving = true;
         solutions.clear();
 
-        initConnectivityGraph(board);
-
         int[] diceOccurrences = Board.countDiceNumbers(diceNumbers.stream());
-        diceOccurrences[0] = 1; // one field must be empty
-
+        int[] fixedDiceOccurrences = Board.countDiceNumbers(fixedDiceNumbers.stream());
         int[] visibleDiceNumbers = board.countVisibleDiceNumbers();
 
         List<Piece> availablePieces = board.getAvailablePieces();
 
         Comparator<Piece> pieceSorter = Comparator.comparingInt(Piece::getNumOccupations)
                 .thenComparingInt(Piece::getMaxDimension)
-                .thenComparingInt(Piece::getMinDimension);
+                .thenComparingInt(Piece::getMinDimension).reversed();
 
         availablePieces.sort(pieceSorter);
 
-        solveWithCurrentBoard(board, availablePieces, diceOccurrences, visibleDiceNumbers);
+        solveWithCurrentBoard(board, availablePieces, diceOccurrences, visibleDiceNumbers, fixedDiceOccurrences);
         if (mainFrame != null)
             mainFrame.indicateSolvingFinished();
 
@@ -86,7 +83,7 @@ public class Solver {
     public void initConnectivityGraph(Board board) {
         connectionGraph.clear();
 
-        List<Field> unoccupiedFields = board.getUnoccupiedFields();
+        List<Field> unoccupiedFields = board.getUnoccupiedFields().toList();
 
         addFieldsToConnectivityGraph(unoccupiedFields);
 
@@ -122,7 +119,7 @@ public class Solver {
 
 
     public void solveWithCurrentBoard(Board board, List<Piece> availablePieces, int[] diceNumbers,
-                                      int[] visibleDiceNumbers) {
+                                      int[] visibleDiceNumbers, int[] fixedDiceOccurrences) {
 
         if (availablePieces.isEmpty()) {
             if (Arrays.equals(diceNumbers, visibleDiceNumbers)) { // valid solution
@@ -144,7 +141,8 @@ public class Solver {
         int numPiecesOnBoard = board.getPiecesOnBoard().size();
         if (numPiecesOnBoard == CONNECTIVITY_CHECK_AT_PIECE) {
             initConnectivityGraph(board);
-            boolean fieldComponentsCompatible = areFieldComponentsCompatible(board, availablePieces, diceNumbers);
+            boolean fieldComponentsCompatible =
+                    areFieldComponentsCompatible(board, availablePieces, diceNumbers, fixedDiceOccurrences);
             connectedFields.terminate();
             if (fieldComponentsCompatible) {
                 notPrunedTreesCounter++;
@@ -168,7 +166,7 @@ public class Solver {
                         int[] diceNumbersOccupied = Board.countDiceNumbersOfFields(nextPiece.getOccupiedFields().stream());
                         updateVisibleDiceNumbers(visibleDiceNumbers, diceNumbersOccupied, false);
 
-                        solveWithCurrentBoard(board, availablePieces, diceNumbers, visibleDiceNumbers);
+                        solveWithCurrentBoard(board, availablePieces, diceNumbers, visibleDiceNumbers, fixedDiceOccurrences);
 
                         updateVisibleDiceNumbers(visibleDiceNumbers, diceNumbersOccupied, true);
                         board.removeLastPieceFromBoard();
@@ -179,7 +177,8 @@ public class Solver {
         availablePieces.add(0, nextPiece);
     }
 
-    private boolean areFieldComponentsCompatible(Board board, List<Piece> availablePieces, int[] diceNumbers) {
+    private boolean areFieldComponentsCompatible(Board board, List<Piece> availablePieces,
+                                                 int[] diceNumbers, int[] fixedDiceOccurrences) {
         connectedFields = new ConnectedComponents(connectionGraph);
         if (connectedFields.getConnectedComponentsCount() == 1) {
             return true;
@@ -187,7 +186,7 @@ public class Solver {
 
         ConnectedComponent biggestComponent = connectedFields.getGiantComponent();
 
-        int[] fixedDiceNumbers = new int[Board.DIM];
+        int[] componentFixedDiceOccurrences = Arrays.copyOf(fixedDiceOccurrences, fixedDiceOccurrences.length);
         for (ConnectedComponent fieldComponent : connectedFields) {
             if (fieldComponent.getNodeCount() >= biggestComponent.getNodeCount())
                 continue;
@@ -201,8 +200,8 @@ public class Solver {
 
             if (!fittable) {
                 for (int i = 0; i < Board.DIM; i++) {
-                    fixedDiceNumbers[i] += fcp.diceNumbers[i];
-                    if (fixedDiceNumbers[i] > diceNumbers[i]) {
+                    componentFixedDiceOccurrences[i] += fcp.diceNumbers[i];
+                    if (componentFixedDiceOccurrences[i] > diceNumbers[i]) {
                         return false;
                     }
                 }
