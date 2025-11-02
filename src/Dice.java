@@ -43,9 +43,8 @@ public class Dice extends Canvas {
         }
 
         if (fixedField != null) {
-            fixedField.setFixedDice(null);
+            mainFrame.unfixField(fixedField.getRow(), fixedField.getColumn());
             fixedField = null;
-            mainFrame.drawBoard();
         }
 
         lastEvent = System.currentTimeMillis();
@@ -65,7 +64,7 @@ public class Dice extends Canvas {
 
     public void draw() {
         GraphicsContext graphics = getGraphicsContext2D();
-        graphics.setFill(isFixed() ? FIXED_COLORS[number - 1] : BACKGROUND_COLOR);
+        graphics.setFill(isFieldFixed() ? FIXED_COLORS[number - 1] : BACKGROUND_COLOR);
         graphics.fillRect(0,0, FIELD_SIZE, FIELD_SIZE);
         graphics.setStroke(Color.BLACK);
         graphics.setLineWidth(2);
@@ -109,15 +108,11 @@ public class Dice extends Canvas {
         return number;
     }
 
-    public boolean isFixed() {
+    public boolean isFieldFixed() {
         return fixedField != null;
     }
 
     public void setFixedField(Field fixedField) {
         this.fixedField = fixedField;
-    }
-
-    public Field getFixedField() {
-        return fixedField;
     }
 }

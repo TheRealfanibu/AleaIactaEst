@@ -50,7 +50,7 @@ public class PieceSidebar extends HBox {
 
         PieceCanvas pieceCanvas = (PieceCanvas) e.getSource();
         Board board = pieceCanvas.getBoard();
-        if (board.getFieldOnBoard(row, column).isOccupied()) {
+        if (board.getFieldOnBoard(row, column).isOccupiedByPiece()) {
             Transform mouseCoordsRotate = new Rotate(pieceCanvas.getRotationAngle(),
                     pieceCanvas.getWidth() / 2, pieceCanvas.getHeight() / 2);
             Point2D absoluteMouseCoords = mouseCoordsRotate.transform(e.getX(), e.getY());

@@ -52,7 +52,7 @@ public class Board {
     }
 
     public int[] countVisibleDiceNumbers() {
-        return countDiceNumbersOfFields(allFields.stream().filter(field -> !field.isOccupied()));
+        return countDiceNumbersOfFields(allFields.stream().filter(field -> !field.isOccupiedByPiece()));
     }
 
     public static int[] countDiceNumbersOfFields(Stream<Field> fieldStream) {
@@ -140,6 +140,9 @@ public class Board {
             copyBoard.placePieceOnBoard(copyPiece, piece.getOrientationOnBoard(),
                     piece.getRowOffsetOnBoard(), piece.getColumnOffsetOnBoard());
         }
+        allFields.stream().filter(Field::isDiceFixed)
+                .forEach(field -> copyBoard.getFieldOnBoard(field.getRow(), field.getColumn())
+                        .setFixedDice(field.getFixedDice()));
         return copyBoard;
     }
 

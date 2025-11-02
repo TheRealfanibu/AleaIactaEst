@@ -23,8 +23,13 @@ public class Field {
         return position.row() * MainFrame.FIELD_SIZE;
     }
 
-    public boolean isOccupied() {
+
+    public boolean isOccupiedByPiece() {
         return occupationPiece != null;
+    }
+
+    public boolean isOccupied() {
+        return isOccupiedByPiece() || isDiceFixed();
     }
 
     public void setOccupationPiece(Piece occupationPiece) {

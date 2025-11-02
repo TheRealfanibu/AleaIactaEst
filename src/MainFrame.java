@@ -72,7 +72,7 @@ public class MainFrame extends Application {
         System.out.println(row + " " + column);
 
         Field draggedField = board.getFieldOnBoard(row, column);
-        if(draggedField.isOccupied()) {
+        if(draggedField.isOccupiedByPiece()) {
             Piece draggedPiece = draggedField.getOccupationPiece();
 
             int minPieceRow = getMinAttributeField(draggedPiece.getOccupiedFields(), Field::getRow);
@@ -279,7 +279,7 @@ public class MainFrame extends Application {
         int column = (int)  (mouseX / FIELD_SIZE);
 
         Field field = board.getFieldOnBoard(row, column);
-        if (!field.isOccupied()) {
+        if (!field.isOccupiedByPiece()) {
             boolean diceChange = false;
             Dice alteredDice = null;
 
@@ -290,7 +290,7 @@ public class MainFrame extends Application {
                 diceChange = true;
             } else {
                 Optional<Dice> optUnfixedDice = Arrays.stream(dices)
-                        .filter(dice -> dice.getNumber() == field.getNumber() && !dice.isFixed())
+                        .filter(dice -> dice.getNumber() == field.getNumber() && !dice.isFieldFixed())
                         .findFirst();
 
                 if(optUnfixedDice.isPresent()) {
@@ -309,13 +309,18 @@ public class MainFrame extends Application {
         }
     }
 
+    public void unfixField(int row, int column) {
+        board.getFieldOnBoard(row, column).setFixedDice(null);
+        drawBoard();
+    }
+
 
     public synchronized void drawBoard() {
         graphics.setFill(Dice.BACKGROUND_COLOR);
         graphics.fillRect(0, 0, CANVAS_SIZE, CANVAS_SIZE);
 
         board.getAllFields().stream()
-                .filter(field -> !field.isOccupied())
+                .filter(field -> !field.isOccupiedByPiece())
                 .forEach(this::drawField);
 
         graphics.setStroke(Color.BLACK);
@@ -337,7 +342,7 @@ public class MainFrame extends Application {
         int column = (int) (mouseX / FIELD_SIZE);
 
         Field clickedField = board.getFieldOnBoard(row, column);
-        if (clickedField.isOccupied()) {
+        if (clickedField.isOccupiedByPiece()) {
             Piece occupationPiece = clickedField.getOccupationPiece();
             fixedPiecesOnBoard.remove(occupationPiece);
             board.removePieceFromBoard(occupationPiece);
