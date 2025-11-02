@@ -154,8 +154,7 @@ public class MainFrame extends Application {
             } else {
                 removeDragPiece(pieceToPlace);
             }
-        }
-        if (dragFieldOrigin != null) { // piece got removed from position
+        } else if (dragFieldOrigin != null) { // piece got removed from position
             removeDragPiece(pieceToPlace);
         }
 

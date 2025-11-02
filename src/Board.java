@@ -6,27 +6,28 @@ import java.util.stream.Stream;
 public class Board {
 
 
-    private static final int[][] NUMBERS = { // original board (no solution for 6x2)
-            {1, 5, 4, 3, 2, 6, 0},
-            {0, 3, 1, 2, 6, 4, 5},
-            {6, 2, 3, 5, 1, 0, 4},
-            {3, 4, 2, 6, 0, 5, 1},
-            {4, 6, 0, 1, 5, 2, 3},
-            {5, 0, 6, 4, 3, 1, 2},
-            {2, 1, 5, 0, 4, 3, 6}
+//    private static final int[][] NUMBERS = { // original board (no solution for 6x2)
+//            {1, 5, 4, 3, 2, 6, 0},
+//            {0, 3, 1, 2, 6, 4, 5},
+//            {6, 2, 3, 5, 1, 0, 4},
+//            {3, 4, 2, 6, 0, 5, 1},
+//            {4, 6, 0, 1, 5, 2, 3},
+//            {5, 0, 6, 4, 3, 1, 2},
+//            {2, 1, 5, 0, 4, 3, 6}
+//    };
+
+        private static final int[][] NUMBERS = { // example board with solutions for all dice combinations
+            {2,0,5,1,6,3,4},
+            {1,5,4,3,0,6,2},
+            {4,6,0,2,3,1,5},
+            {3,4,2,6,5,0,1},
+            {5,3,6,4,1,2,0},
+            {0,1,3,5,2,4,6},
+            {6,2,1,0,4,5,3},
     };
 
     public static final int DIM = NUMBERS.length; // on normal board = 7
 
-//    private static final int[][] NUMBERS = { // example board with solutions for all dice combinations
-//            {2,0,5,1,6,3,4},
-//            {1,5,4,3,0,6,2},
-//            {4,6,0,2,3,1,5},
-//            {3,4,2,6,5,0,1},
-//            {5,3,6,4,1,2,0},
-//            {0,1,3,5,2,4,6},
-//            {6,2,1,0,4,5,3},
-//    };
 
     private final Field[][] boardFields = new Field[DIM][DIM];
     private final List<Field> allFields = new LinkedList<>();

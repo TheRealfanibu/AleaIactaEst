@@ -56,6 +56,8 @@ public class Solver {
         solutions.clear();
 
         int[] diceOccurrences = Board.countDiceNumbers(diceNumbers.stream());
+        diceOccurrences[0] = 1;
+
         int[] fixedDiceOccurrences = Board.countDiceNumbers(fixedDiceNumbers.stream());
         int[] visibleDiceNumbers = board.countVisibleDiceNumbers();
 

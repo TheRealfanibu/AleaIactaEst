@@ -16,6 +16,7 @@ public class SolutionChecker {
             checkSolution(dices);
         }
 
+
         checkAllSubsolutions(dices, 1, 0);
     }
 
