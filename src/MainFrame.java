@@ -234,11 +234,16 @@ public class MainFrame extends Application {
         solutionLabel.setText("Solution: " + solutionNumbers);
     }
 
-    private void resetBoard() {
+    private void resetPieces() {
         board.reset();
         fixedPiecesOnBoard.clear();
-        Arrays.stream(dices).forEach(Dice::draw);
         updatePiecesAndResetSolution();
+    }
+
+    private void resetAll() {
+        board.resetFixedFields();
+        Arrays.stream(dices).forEach(Dice::draw);
+        resetPieces();
     }
 
     private void solveBoard() {
@@ -388,13 +393,17 @@ public class MainFrame extends Application {
         solveButton.setFont(buttonFont);
         solveButton.onActionProperty().set(e -> solveBoard());
 
+        Button resetPiecesButton = new Button("Reset Pieces");
+        resetPiecesButton.setFont(buttonFont);
+        resetPiecesButton.onActionProperty().set(e -> resetPieces());
+
         Button resetButton = new Button("Reset");
         resetButton.setFont(buttonFont);
-        resetButton.onActionProperty().set(e -> resetBoard());
+        resetButton.onActionProperty().set(e -> resetAll());
 
         HBox upperBox = new HBox(10);
         upperBox.setAlignment(Pos.CENTER);
-        upperBox.getChildren().addAll(showSolutionBox, solveButton, resetButton);
+        upperBox.getChildren().addAll(showSolutionBox, solveButton, resetButton, resetPiecesButton);
 
         HBox solutionBox = new HBox(10);
         solutionBox.setAlignment(Pos.CENTER);
