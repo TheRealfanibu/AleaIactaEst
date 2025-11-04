@@ -7,14 +7,16 @@ import org.graphstream.graph.implementations.DefaultGraph;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
 public class Solver {
 
     private static final int CONNECTIVITY_CHECK_AT_PIECE = 3;
 
-    private final List<Board> solutions = Collections.synchronizedList(new ArrayList<>());
+    private static final int THREAD_SPLIT_AT_PIECE = 0;
 
     private final MainFrame mainFrame;
 
@@ -22,9 +24,13 @@ public class Solver {
 
     private final boolean searchOnlyOneSolution;
 
-    private final Map<Set<Node>, FieldComponentProperty> fieldComponentProperties = new ConcurrentHashMap<>();
+    private final List<Board> solutions;
+
+    private final Map<Set<Node>, FieldComponentProperty> fieldComponentProperties;
 
     private AtomicInteger prunedTreesCounter, notPrunedTreesCounter;
+
+    private ExecutorService threadExecutor;
 
 
     public Solver() {
@@ -38,6 +44,14 @@ public class Solver {
     public Solver(MainFrame mainFrame, boolean searchOnlyOneSolution) {
         this.searchOnlyOneSolution = searchOnlyOneSolution;
         this.mainFrame = mainFrame;
+
+        if (THREAD_SPLIT_AT_PIECE > 0) { // do multi-threading
+            solutions = Collections.synchronizedList(new ArrayList<>());
+            fieldComponentProperties = new ConcurrentHashMap<>();
+        } else {
+            solutions = new ArrayList<>();
+            fieldComponentProperties = new HashMap<>();
+        }
     }
 
     public void solve(Board board, List<Integer> diceNumbers, List<Integer> fixedDiceNumbers) {
@@ -64,7 +78,19 @@ public class Solver {
 
         availablePieces.sort(pieceSorter);
 
-        solveWithCurrentBoard(board, availablePieces, diceOccurrences, visibleDiceNumbers, fixedDiceOccurrences);
+        threadExecutor = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
+        solveWithCurrentBoard(board, availablePieces, visibleDiceNumbers, diceOccurrences, fixedDiceOccurrences);
+
+        threadExecutor.shutdown();
+        try {
+            boolean terminated = threadExecutor.awaitTermination(300, TimeUnit.SECONDS);
+            if (!terminated) {
+                System.err.println("Solver timeout");
+            }
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
+        }
+
         if (mainFrame != null)
             mainFrame.indicateSolvingFinished();
 
@@ -80,8 +106,8 @@ public class Solver {
     public Graph initConnectivityGraph(Board board) {
         List<Field> unoccupiedFields = board.getUnoccupiedFields().toList();
 
-        Graph connectionGraph = new DefaultGraph("ConnectionGraph", true, false,
-                unoccupiedFields.size(), 2 * unoccupiedFields.size());
+        Graph connectionGraph = new DefaultGraph("ConnectionGraph-" + Thread.currentThread().getName(),
+                true, false, unoccupiedFields.size(), 2 * unoccupiedFields.size());
         connectionGraph.setNodeFactory((id, graph) -> new BoardNode((AbstractGraph) graph, id));
 
         addFieldsToConnectivityGraph(connectionGraph, unoccupiedFields);
@@ -111,10 +137,10 @@ public class Solver {
     }
 
 
-    public void solveWithCurrentBoard(Board board, List<Piece> availablePieces, int[] diceNumbers,
-                                      int[] visibleDiceNumbers, int[] fixedDiceOccurrences) {
+    public void solveWithCurrentBoard(Board board, List<Piece> availablePieces, int[] visibleDiceNumbers,
+                                      int[] diceOccurrences, int[] fixedDiceOccurrences) {
         if (availablePieces.isEmpty()) {
-            if (Arrays.equals(diceNumbers, visibleDiceNumbers)) { // valid solution
+            if (Arrays.equals(diceOccurrences, visibleDiceNumbers)) { // valid solution
                 solutions.add(board.copy());
 
                 if (searchOnlyOneSolution) {
@@ -126,14 +152,14 @@ public class Solver {
             return;
         }
 
-        if (!areEnoughSolutionDiceNumbersAvailable(diceNumbers, visibleDiceNumbers)) {
+        if (!areEnoughSolutionDiceNumbersAvailable(diceOccurrences, visibleDiceNumbers)) {
             return;
         }
 
         int numPiecesOnBoard = board.getPiecesOnBoard().size();
         if (numPiecesOnBoard == CONNECTIVITY_CHECK_AT_PIECE) {
             boolean fieldComponentsCompatible =
-                    areFieldComponentsCompatible(board, availablePieces, diceNumbers, fixedDiceOccurrences);
+                    areFieldComponentsCompatible(board, availablePieces, diceOccurrences, fixedDiceOccurrences);
             if (fieldComponentsCompatible) {
                 notPrunedTreesCounter.incrementAndGet();
             } else {
@@ -156,7 +182,16 @@ public class Solver {
                         int[] diceNumbersOccupied = Board.countDiceNumbersOfFields(nextPiece.getOccupiedFields().stream());
                         updateVisibleDiceNumbers(visibleDiceNumbers, diceNumbersOccupied, false);
 
-                        solveWithCurrentBoard(board, availablePieces, diceNumbers, visibleDiceNumbers, fixedDiceOccurrences);
+                        if (board.getPiecesOnBoard().size() == THREAD_SPLIT_AT_PIECE) {
+                            Board boardCopy = board.copy();
+                            List<Piece> availablePiecesCopy = boardCopy.getAvailablePieces();
+                            int[] visibleDiceNumbersCopy = Arrays.copyOf(visibleDiceNumbers, visibleDiceNumbers.length);
+                            threadExecutor.submit(() -> solveWithCurrentBoard(boardCopy, availablePiecesCopy, visibleDiceNumbersCopy,
+                                    diceOccurrences, fixedDiceOccurrences));
+                        } else {
+                            solveWithCurrentBoard(board, availablePieces, visibleDiceNumbers, diceOccurrences, fixedDiceOccurrences);
+                        }
+
 
                         updateVisibleDiceNumbers(visibleDiceNumbers, diceNumbersOccupied, true);
                         board.removeLastPieceFromBoard();
