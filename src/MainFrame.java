@@ -23,6 +23,8 @@ import javafx.scene.text.Font;
 import javafx.stage.Stage;
 
 import java.util.*;
+import java.util.concurrent.ScheduledThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
 import java.util.function.ToIntFunction;
 
 public class MainFrame extends Application {
@@ -55,6 +57,8 @@ public class MainFrame extends Application {
     private boolean anySolutionFound = false;
     private int currentSolutionNumber;
     private int numberSolutionsFound;
+    private ScheduledThreadPoolExecutor solutionStatsUpdater;
+
 
     private Canvas floatingPieceCanvas = null;
     private int floatingPieceOffsetX;
@@ -105,6 +109,7 @@ public class MainFrame extends Application {
 
         floatingPieceCanvas.setVisible(false);
         rootPane.getChildren().add(floatingPieceCanvas);
+
 
         Platform.runLater(() -> { // to avoid the piece popping up in the top left corner
             try {
@@ -199,6 +204,7 @@ public class MainFrame extends Application {
             String solveButtonText = numberSolutionsFound == 0 ? "No solution found." : "Solved.";
             Platform.runLater(() -> solveButton.setText(solveButtonText));
         }
+        solutionStatsUpdater.shutdown();
     }
 
     public void updateSolutionStats() {
@@ -215,7 +221,6 @@ public class MainFrame extends Application {
                             updateSolution();
                         }
                     }
-
                     updateSolutionObjects();
                 }
             }
@@ -255,6 +260,10 @@ public class MainFrame extends Application {
         List<Integer> diceNumbers = Arrays.stream(dices).map(Dice::getNumber).toList();
         List<Integer> fixedDiceNumbers = Arrays.stream(dices).filter(Dice::isFieldFixed).map(Dice::getNumber).toList();
         new Thread(() -> solver.solve(board, diceNumbers, fixedDiceNumbers)).start();
+
+        long period = 50;
+        solutionStatsUpdater = new ScheduledThreadPoolExecutor(1);
+        solutionStatsUpdater.scheduleAtFixedRate(this::updateSolutionStats, period, period, TimeUnit.MILLISECONDS);
     }
 
     public void resetSolutionObjects() {

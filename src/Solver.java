@@ -16,7 +16,7 @@ public class Solver {
 
     private static final int CONNECTIVITY_CHECK_AT_PIECE = 3;
 
-    private static final int THREAD_SPLIT_AT_PIECE = 0;
+    private static final int THREAD_SPLIT_AT_PIECE = 2;
 
     private final MainFrame mainFrame;
 
@@ -103,40 +103,6 @@ public class Solver {
         System.out.println("Solving took: " + (System.currentTimeMillis() - startTime) / 1000d + "s");
     }
 
-    public Graph initConnectivityGraph(Board board) {
-        List<Field> unoccupiedFields = board.getUnoccupiedFields().toList();
-
-        Graph connectionGraph = new DefaultGraph("ConnectionGraph-" + Thread.currentThread().getName(),
-                true, false, unoccupiedFields.size(), 2 * unoccupiedFields.size());
-        connectionGraph.setNodeFactory((id, graph) -> new BoardNode((AbstractGraph) graph, id));
-
-        addFieldsToConnectivityGraph(connectionGraph, unoccupiedFields);
-
-        for (Field field : unoccupiedFields) {
-            addEdgeToGraphIfNeighborConnected(connectionGraph, board, field, 1, 0);
-            addEdgeToGraphIfNeighborConnected(connectionGraph, board, field, 0, 1);
-        }
-        return connectionGraph;
-    }
-
-    private void addFieldsToConnectivityGraph(Graph connectionGraph, List<Field> fields) {
-        fields.forEach(field -> {
-            BoardNode node = (BoardNode) connectionGraph.addNode(field.getId());
-            node.setField(field);
-        });
-    }
-
-    private void addEdgeToGraphIfNeighborConnected(Graph connectionGraph, Board board, Field field, int rowOffset, int columnOffset) {
-        int row = field.getRow() + rowOffset;
-        int column = field.getColumn() + columnOffset;
-        if (!Board.isOutOfBounds(row, column) &&
-                !board.getFieldOnBoard(row, column).isOccupied()) {
-            Field connectedField = board.getFieldOnBoard(row, column);
-            connectionGraph.addEdge(field.getId() + "-" + connectedField.getId(), field.getId(), connectedField.getId());
-        }
-    }
-
-
     public void solveWithCurrentBoard(Board board, List<Piece> availablePieces, int[] visibleDiceNumbers,
                                       int[] diceOccurrences, int[] fixedDiceOccurrences) {
         if (availablePieces.isEmpty()) {
@@ -146,8 +112,6 @@ public class Solver {
                 if (searchOnlyOneSolution) {
                     stop();
                 }
-                if (mainFrame != null)
-                    mainFrame.updateSolutionStats();
             }
             return;
         }
@@ -201,6 +165,40 @@ public class Solver {
         }
         availablePieces.add(0, nextPiece);
     }
+
+    public Graph initConnectivityGraph(Board board) {
+        List<Field> unoccupiedFields = board.getUnoccupiedFields().toList();
+
+        Graph connectionGraph = new DefaultGraph("ConnectionGraph-" + Thread.currentThread().getName(),
+                true, false, unoccupiedFields.size(), 2 * unoccupiedFields.size());
+        connectionGraph.setNodeFactory((id, graph) -> new BoardNode((AbstractGraph) graph, id));
+
+        addFieldsToConnectivityGraph(connectionGraph, unoccupiedFields);
+
+        for (Field field : unoccupiedFields) {
+            addEdgeToGraphIfNeighborConnected(connectionGraph, board, field, 1, 0);
+            addEdgeToGraphIfNeighborConnected(connectionGraph, board, field, 0, 1);
+        }
+        return connectionGraph;
+    }
+
+    private void addFieldsToConnectivityGraph(Graph connectionGraph, List<Field> fields) {
+        fields.forEach(field -> {
+            BoardNode node = (BoardNode) connectionGraph.addNode(field.getId());
+            node.setField(field);
+        });
+    }
+
+    private void addEdgeToGraphIfNeighborConnected(Graph connectionGraph, Board board, Field field, int rowOffset, int columnOffset) {
+        int row = field.getRow() + rowOffset;
+        int column = field.getColumn() + columnOffset;
+        if (!Board.isOutOfBounds(row, column) &&
+                !board.getFieldOnBoard(row, column).isOccupied()) {
+            Field connectedField = board.getFieldOnBoard(row, column);
+            connectionGraph.addEdge(field.getId() + "-" + connectedField.getId(), field.getId(), connectedField.getId());
+        }
+    }
+
 
     private boolean areFieldComponentsCompatible(Board board, List<Piece> availablePieces,
                                                  int[] diceNumbers, int[] fixedDiceOccurrences) {
