@@ -224,7 +224,7 @@ public class MainFrame extends Application {
     }
 
 
-    private synchronized void updateSolutionObjects() {
+    private void updateSolutionObjects() {
         firstSolutionButton.setDisable(currentSolutionNumber <= 1);
         previusSolutionButton.setDisable(currentSolutionNumber <= 1);
         nextSolutionButton.setDisable(currentSolutionNumber >= numberSolutionsFound);
@@ -258,7 +258,9 @@ public class MainFrame extends Application {
     }
 
     public void resetSolutionObjects() {
-        solver.stop();
+        synchronized (this) {
+            solver.stop();
+        }
         anySolutionFound = false;
         numberSolutionsFound = 0;
         currentSolutionNumber = 0;
@@ -317,7 +319,7 @@ public class MainFrame extends Application {
     }
 
 
-    public synchronized void drawBoard() {
+    public void drawBoard() {
         graphics.setFill(Dice.BACKGROUND_COLOR);
         graphics.fillRect(0, 0, CANVAS_SIZE, CANVAS_SIZE);
 

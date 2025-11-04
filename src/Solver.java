@@ -6,11 +6,15 @@ import org.graphstream.graph.implementations.AbstractGraph;
 import org.graphstream.graph.implementations.DefaultGraph;
 
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.Executors;
+import java.util.concurrent.atomic.AtomicInteger;
 
 public class Solver {
 
+    private static final int CONNECTIVITY_CHECK_AT_PIECE = 3;
 
-    private final List<Board> solutions = new ArrayList<>();
+    private final List<Board> solutions = Collections.synchronizedList(new ArrayList<>());
 
     private final MainFrame mainFrame;
 
@@ -18,15 +22,9 @@ public class Solver {
 
     private final boolean searchOnlyOneSolution;
 
-    private static final int CONNECTIVITY_CHECK_AT_PIECE = 3;
+    private final Map<Set<Node>, FieldComponentProperty> fieldComponentProperties = new ConcurrentHashMap<>();
 
-    private final Graph connectionGraph;
-
-    private ConnectedComponents connectedFields;
-
-    private final Map<Set<Node>, FieldComponentProperty> fieldComponentProperties = new HashMap<>();
-
-    private int prunedTreesCounter, notPrunedTreesCounter;
+    private AtomicInteger prunedTreesCounter, notPrunedTreesCounter;
 
 
     public Solver() {
@@ -40,16 +38,13 @@ public class Solver {
     public Solver(MainFrame mainFrame, boolean searchOnlyOneSolution) {
         this.searchOnlyOneSolution = searchOnlyOneSolution;
         this.mainFrame = mainFrame;
-
-        connectionGraph = new DefaultGraph("ConnectionGraph", true, false);
-        connectionGraph.setNodeFactory((id, graph) -> new BoardNode((AbstractGraph) graph, id));
     }
 
     public void solve(Board board, List<Integer> diceNumbers, List<Integer> fixedDiceNumbers) {
         long startTime = System.currentTimeMillis();
 
-        prunedTreesCounter = 0;
-        notPrunedTreesCounter = 0;
+        prunedTreesCounter = new AtomicInteger();
+        notPrunedTreesCounter = new AtomicInteger();
 
         board = board.copy();
         solving = true;
@@ -73,37 +68,39 @@ public class Solver {
         if (mainFrame != null)
             mainFrame.indicateSolvingFinished();
 
-        int total = prunedTreesCounter + notPrunedTreesCounter;
+        int total = prunedTreesCounter.get() + notPrunedTreesCounter.get();
         if (total > 0) {
-            System.out.println("prune ratio: " + (double) prunedTreesCounter / total);
+            System.out.println("prune ratio: " + (double) prunedTreesCounter.get() / total);
             System.out.println("total trees pruned: " + prunedTreesCounter);
         }
         System.out.println("field components computed: " + fieldComponentProperties.size());
         System.out.println("Solving took: " + (System.currentTimeMillis() - startTime) / 1000d + "s");
     }
 
-    public void initConnectivityGraph(Board board) {
-        connectionGraph.clear();
-
+    public Graph initConnectivityGraph(Board board) {
         List<Field> unoccupiedFields = board.getUnoccupiedFields().toList();
 
-        addFieldsToConnectivityGraph(unoccupiedFields);
+        Graph connectionGraph = new DefaultGraph("ConnectionGraph", true, false,
+                unoccupiedFields.size(), 2 * unoccupiedFields.size());
+        connectionGraph.setNodeFactory((id, graph) -> new BoardNode((AbstractGraph) graph, id));
+
+        addFieldsToConnectivityGraph(connectionGraph, unoccupiedFields);
 
         for (Field field : unoccupiedFields) {
-            addEdgeToGraphIfNeighborConnected(board, field, 1, 0);
-            addEdgeToGraphIfNeighborConnected(board, field, 0, 1);
+            addEdgeToGraphIfNeighborConnected(connectionGraph, board, field, 1, 0);
+            addEdgeToGraphIfNeighborConnected(connectionGraph, board, field, 0, 1);
         }
-
+        return connectionGraph;
     }
 
-    private void addFieldsToConnectivityGraph(List<Field> fields) {
+    private void addFieldsToConnectivityGraph(Graph connectionGraph, List<Field> fields) {
         fields.forEach(field -> {
             BoardNode node = (BoardNode) connectionGraph.addNode(field.getId());
             node.setField(field);
         });
     }
 
-    private void addEdgeToGraphIfNeighborConnected(Board board, Field field, int rowOffset, int columnOffset) {
+    private void addEdgeToGraphIfNeighborConnected(Graph connectionGraph, Board board, Field field, int rowOffset, int columnOffset) {
         int row = field.getRow() + rowOffset;
         int column = field.getColumn() + columnOffset;
         if (!Board.isOutOfBounds(row, column) &&
@@ -116,7 +113,6 @@ public class Solver {
 
     public void solveWithCurrentBoard(Board board, List<Piece> availablePieces, int[] diceNumbers,
                                       int[] visibleDiceNumbers, int[] fixedDiceOccurrences) {
-
         if (availablePieces.isEmpty()) {
             if (Arrays.equals(diceNumbers, visibleDiceNumbers)) { // valid solution
                 solutions.add(board.copy());
@@ -136,14 +132,12 @@ public class Solver {
 
         int numPiecesOnBoard = board.getPiecesOnBoard().size();
         if (numPiecesOnBoard == CONNECTIVITY_CHECK_AT_PIECE) {
-            initConnectivityGraph(board);
             boolean fieldComponentsCompatible =
                     areFieldComponentsCompatible(board, availablePieces, diceNumbers, fixedDiceOccurrences);
-            connectedFields.terminate();
             if (fieldComponentsCompatible) {
-                notPrunedTreesCounter++;
+                notPrunedTreesCounter.incrementAndGet();
             } else {
-                prunedTreesCounter++;
+                prunedTreesCounter.incrementAndGet();
                 return;
             }
         }
@@ -175,7 +169,8 @@ public class Solver {
 
     private boolean areFieldComponentsCompatible(Board board, List<Piece> availablePieces,
                                                  int[] diceNumbers, int[] fixedDiceOccurrences) {
-        connectedFields = new ConnectedComponents(connectionGraph);
+        Graph connectionGraph = initConnectivityGraph(board);
+        ConnectedComponents connectedFields = new ConnectedComponents(connectionGraph);
         if (connectedFields.getConnectedComponentsCount() == 1) {
             return true;
         }
