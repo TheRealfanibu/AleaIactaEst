@@ -44,6 +44,10 @@ public class Field {
         return number;
     }
 
+    public FieldPosition getPosition() {
+        return position;
+    }
+
     public int getRow() {
         return position.row();
     }

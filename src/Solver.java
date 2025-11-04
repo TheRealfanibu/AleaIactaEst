@@ -11,8 +11,15 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.Function;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 public class Solver {
+
+    private static final Comparator<Piece> PIECE_ORDER = Comparator.comparingInt(Piece::getNumOccupations)
+            .thenComparingInt(Piece::getMaxDimension)
+            .thenComparingInt(Piece::getMinDimension).reversed();
 
     private static final int CONNECTIVITY_CHECK_AT_PIECE = 3;
 
@@ -23,6 +30,7 @@ public class Solver {
     private boolean solving = false;
 
     private final boolean searchOnlyOneSolution;
+    private boolean checkConnectivity;
 
     private final List<Board> solutions;
 
@@ -54,6 +62,47 @@ public class Solver {
         }
     }
 
+    public PiecePositionSolutions getNextBestPiecePosition(List<Piece> availablePieces) {
+        List<PiecePositionSolutions> piecePositionSolutions = new LinkedList<>();
+        for (Piece piece : availablePieces) {
+            int pieceId = piece.getId();
+            Map<PieceOrientation, List<Board>> solutionsPerOrientation = groupSolutionsBy(solutions, pieceId, Piece::getOrientationOnBoard);
+
+            for (PieceOrientation orientation : piece.getOrientations()) {
+                List<Board> orientationSolutions = solutionsPerOrientation.get(orientation);
+                if (orientationSolutions != null) {
+                    Map<FieldPosition, List<Board>> solutionsPerPosition = groupSolutionsBy(orientationSolutions, pieceId,
+                            solutionPiece -> new FieldPosition(solutionPiece.getRowOffsetOnBoard(), solutionPiece.getColumnOffsetOnBoard()));
+
+                    Stream<PiecePositionSolutions> positionSolutions = solutionsPerPosition.keySet().parallelStream()
+                            .map(fieldPosition -> new PiecePositionSolutions(piece, orientation, fieldPosition, solutionsPerPosition.get(fieldPosition)));
+                    piecePositionSolutions.add(getBestPiecePositionSolutions(positionSolutions));
+                }
+            }
+        }
+        System.out.println(piecePositionSolutions.size());
+        PiecePositionSolutions bestPosition = getBestPiecePositionSolutions(piecePositionSolutions.stream());
+
+        solutions.clear();
+        solutions.addAll(bestPosition.solutions());
+
+        return bestPosition;
+    }
+
+    private PiecePositionSolutions getBestPiecePositionSolutions(Stream<PiecePositionSolutions> pps) {
+        return pps.max(Comparator.comparingInt(x -> x.solutions().size())).orElseThrow();
+    }
+
+    private <T> Map<T, List<Board>> groupSolutionsBy(List<Board> solutions, int pieceId, Function<Piece, T> grouper) {
+        return solutions.parallelStream().collect(Collectors.groupingBy(board -> {
+            Piece piece = board.getAllPieces().get(pieceId);
+            return grouper.apply(piece);
+        }));
+    }
+
+    public record PiecePositionSolutions(Piece piece, PieceOrientation orientation, FieldPosition position, List<Board> solutions) {
+    }
+
     public void solve(Board board, List<Integer> diceNumbers, List<Integer> fixedDiceNumbers) {
         long startTime = System.currentTimeMillis();
 
@@ -66,19 +115,16 @@ public class Solver {
 
         int[] diceOccurrences = Board.countDiceNumbers(diceNumbers.stream());
         diceOccurrences[0] = 1;
+        checkConnectivity = Arrays.stream(diceOccurrences).anyMatch(x -> x > 1); // will not prune many trees if dices are 1-2-3-4-5-6 --> not worth the cost
 
         int[] fixedDiceOccurrences = Board.countDiceNumbers(fixedDiceNumbers.stream());
         int[] visibleDiceNumbers = board.countVisibleDiceNumbers();
 
         List<Piece> availablePieces = board.getAvailablePieces();
+        availablePieces.sort(PIECE_ORDER);
 
-        Comparator<Piece> pieceSorter = Comparator.comparingInt(Piece::getNumOccupations)
-                .thenComparingInt(Piece::getMaxDimension)
-                .thenComparingInt(Piece::getMinDimension).reversed();
+        threadExecutor = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors() - 2);
 
-        availablePieces.sort(pieceSorter);
-
-        threadExecutor = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
         solveWithCurrentBoard(board, availablePieces, visibleDiceNumbers, diceOccurrences, fixedDiceOccurrences);
 
         threadExecutor.shutdown();
@@ -91,6 +137,7 @@ public class Solver {
             throw new RuntimeException(e);
         }
 
+
         if (mainFrame != null)
             mainFrame.indicateSolvingFinished();
 
@@ -98,13 +145,14 @@ public class Solver {
         if (total > 0) {
             System.out.println("prune ratio: " + (double) prunedTreesCounter.get() / total);
             System.out.println("total trees pruned: " + prunedTreesCounter);
+            System.out.println("total trees: " + total);
         }
         System.out.println("field components computed: " + fieldComponentProperties.size());
         System.out.println("Solving took: " + (System.currentTimeMillis() - startTime) / 1000d + "s");
     }
 
-    public void solveWithCurrentBoard(Board board, List<Piece> availablePieces, int[] visibleDiceNumbers,
-                                      int[] diceOccurrences, int[] fixedDiceOccurrences) {
+    private void solveWithCurrentBoard(Board board, List<Piece> availablePieces, int[] visibleDiceNumbers,
+                                       int[] diceOccurrences, int[] fixedDiceOccurrences) {
         if (availablePieces.isEmpty()) {
             if (Arrays.equals(diceOccurrences, visibleDiceNumbers)) { // valid solution
                 solutions.add(board.copy());
@@ -120,11 +168,8 @@ public class Solver {
             return;
         }
 
-        int numPiecesOnBoard = board.getPiecesOnBoard().size();
-        if (numPiecesOnBoard == CONNECTIVITY_CHECK_AT_PIECE) {
-            boolean fieldComponentsCompatible =
-                    areFieldComponentsCompatible(board, availablePieces, diceOccurrences, fixedDiceOccurrences);
-            if (fieldComponentsCompatible) {
+        if (checkConnectivity && board.getPiecesOnBoard().size() == CONNECTIVITY_CHECK_AT_PIECE) {
+            if (areFieldComponentsCompatible(board, availablePieces, diceOccurrences, fixedDiceOccurrences)) {
                 notPrunedTreesCounter.incrementAndGet();
             } else {
                 prunedTreesCounter.incrementAndGet();
@@ -149,13 +194,13 @@ public class Solver {
                         if (board.getPiecesOnBoard().size() == THREAD_SPLIT_AT_PIECE) {
                             Board boardCopy = board.copy();
                             List<Piece> availablePiecesCopy = boardCopy.getAvailablePieces();
+                            availablePiecesCopy.sort(PIECE_ORDER);
                             int[] visibleDiceNumbersCopy = Arrays.copyOf(visibleDiceNumbers, visibleDiceNumbers.length);
                             threadExecutor.submit(() -> solveWithCurrentBoard(boardCopy, availablePiecesCopy, visibleDiceNumbersCopy,
                                     diceOccurrences, fixedDiceOccurrences));
                         } else {
                             solveWithCurrentBoard(board, availablePieces, visibleDiceNumbers, diceOccurrences, fixedDiceOccurrences);
                         }
-
 
                         updateVisibleDiceNumbers(visibleDiceNumbers, diceNumbersOccupied, true);
                         board.removeLastPieceFromBoard();

@@ -26,7 +26,7 @@ public class Dice extends Canvas {
 
     private final MainFrame mainFrame;
 
-    private Field fixedField;
+    private FieldPosition fixedFieldPosition;
 
     public Dice(MainFrame mainFrame, int number) {
         super(MainFrame.FIELD_SIZE, MainFrame.FIELD_SIZE);
@@ -42,9 +42,8 @@ public class Dice extends Canvas {
             return;
         }
 
-        if (fixedField != null) {
-            mainFrame.unfixField(fixedField.getRow(), fixedField.getColumn());
-            fixedField = null;
+        if (fixedFieldPosition != null) {
+            mainFrame.unfixField(this, fixedFieldPosition);
         }
 
         lastEvent = System.currentTimeMillis();
@@ -113,10 +112,10 @@ public class Dice extends Canvas {
     }
 
     public boolean isFieldFixed() {
-        return fixedField != null;
+        return fixedFieldPosition != null;
     }
 
-    public void setFixedField(Field fixedField) {
-        this.fixedField = fixedField;
+    public void setFixedField(FieldPosition fieldPosition) {
+        this.fixedFieldPosition = fieldPosition;
     }
 }

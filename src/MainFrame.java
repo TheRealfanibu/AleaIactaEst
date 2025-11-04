@@ -68,6 +68,7 @@ public class MainFrame extends Application {
     private PieceOrientation dragPieceOrientation;
     private Field dragFieldOrigin;
     private Field dragFieldToBePlaced;
+    private Button hintPiecesButton;
 
 
     private void startPieceDragOnBoard(MouseEvent mouseEvent) {
@@ -185,6 +186,12 @@ public class MainFrame extends Application {
         drawBoard();
     }
 
+    private void updatePiecesWithoutSolutionReset() {
+        updatePieceSidebar();
+        updateSolutionObjects();
+        drawBoard();
+    }
+
     private void updatePieceSidebar() {
         pieceSidebar.update(board.getAvailablePieces());
     }
@@ -192,17 +199,18 @@ public class MainFrame extends Application {
     private void updateSolution() {
         if (anySolutionFound) {
             board = showSolution ? solver.getSolutions().get(currentSolutionNumber - 1) : withoutSolutionBoard;
-            updatePieceSidebar();
-            drawBoard();
-            updateSolutionObjects();
+            updatePiecesWithoutSolutionReset();
         }
     }
 
     public void indicateSolvingFinished() {
         if (solver.isSolving()) {
             updateSolutionStats();
-            String solveButtonText = numberSolutionsFound == 0 ? "No solution found." : "Solved.";
+            String solveButtonText = numberSolutionsFound == 0 ? "No solution." : "Solved.";
             Platform.runLater(() -> solveButton.setText(solveButtonText));
+            if (numberSolutionsFound > 0) {
+                hintPiecesButton.setDisable(false);
+            }
         }
         solutionStatsUpdater.shutdown();
     }
@@ -213,13 +221,11 @@ public class MainFrame extends Application {
         Platform.runLater(() -> {
             synchronized (this) {
                 if (solver.isSolving()) {
-                    if (!anySolutionFound) {
+                    if (!anySolutionFound && numberSolutionsFound > 0) {
                         anySolutionFound = true;
-                        if (numberSolutionsFound > 0) {
-                            currentSolutionNumber = 1;
-                            fixedPiecesOnBoard = board.getPiecesOnBoard();
-                            updateSolution();
-                        }
+                        currentSolutionNumber = 1;
+                        fixedPiecesOnBoard = board.getPiecesOnBoard();
+                        updateSolution();
                     }
                     updateSolutionObjects();
                 }
@@ -240,15 +246,20 @@ public class MainFrame extends Application {
     }
 
     private void resetPieces() {
-        board.reset();
-        fixedPiecesOnBoard.clear();
-        updatePiecesAndResetSolution();
+        if (!board.getPiecesOnBoard().isEmpty()) {
+            board.resetPieces();
+            fixedPiecesOnBoard.clear();
+            updatePiecesAndResetSolution();
+        }
     }
 
-    private void resetAll() {
-        board.resetFixedFields();
-        Arrays.stream(dices).forEach(Dice::draw);
-        resetPieces();
+    private void resetDices() {
+        if (!board.getFixedFields().isEmpty()) {
+            board.resetFixedFields();
+            Arrays.stream(dices).forEach(Dice::draw);
+            resetSolutionObjects();
+            drawBoard();
+        }
     }
 
     private void solveBoard() {
@@ -261,7 +272,7 @@ public class MainFrame extends Application {
         List<Integer> fixedDiceNumbers = Arrays.stream(dices).filter(Dice::isFieldFixed).map(Dice::getNumber).toList();
         new Thread(() -> solver.solve(board, diceNumbers, fixedDiceNumbers)).start();
 
-        long period = 50;
+        long period = 1000 / 30;
         solutionStatsUpdater = new ScheduledThreadPoolExecutor(1);
         solutionStatsUpdater.scheduleAtFixedRate(this::updateSolutionStats, period, period, TimeUnit.MILLISECONDS);
     }
@@ -276,6 +287,8 @@ public class MainFrame extends Application {
 
         solveButton.setDisable(false);
         solveButton.setText("Solve");
+
+        hintPiecesButton.setDisable(true);
 
         updateSolutionObjects();
     }
@@ -322,8 +335,9 @@ public class MainFrame extends Application {
         }
     }
 
-    public void unfixField(int row, int column) {
-        board.getFieldOnBoard(row, column).setFixedDice(null);
+    public void unfixField(Dice dice, FieldPosition fieldPosition) {
+        Field field = board.getFieldOnBoard(fieldPosition.row(), fieldPosition.column());
+        board.removeFixedDice(dice, field, true);
         drawBoard();
     }
 
@@ -408,13 +422,18 @@ public class MainFrame extends Application {
         resetPiecesButton.setFont(buttonFont);
         resetPiecesButton.onActionProperty().set(e -> resetPieces());
 
-        Button resetButton = new Button("Reset");
-        resetButton.setFont(buttonFont);
-        resetButton.onActionProperty().set(e -> resetAll());
+        Button resetDicesButton = new Button("Reset Dices");
+        resetDicesButton.setFont(buttonFont);
+        resetDicesButton.onActionProperty().set(e -> resetDices());
+
+        hintPiecesButton = new Button("Hint");
+        hintPiecesButton.setFont(buttonFont);
+        hintPiecesButton.onActionProperty().set(e -> placeHintPiece());
 
         HBox upperBox = new HBox(10);
         upperBox.setAlignment(Pos.CENTER);
-        upperBox.getChildren().addAll(showSolutionBox, solveButton, resetButton, resetPiecesButton);
+        upperBox.getChildren().addAll(
+                showSolutionBox, resetPiecesButton, resetDicesButton, hintPiecesButton);
 
         HBox solutionBox = new HBox(10);
         solutionBox.setAlignment(Pos.CENTER);
@@ -431,12 +450,24 @@ public class MainFrame extends Application {
         solutionLabel.setFont(buttonFont);
         updateSolutionObjects();
 
-        solutionBox.getChildren().addAll(solutionLabel, firstSolutionButton, previusSolutionButton, nextSolutionButton, lastSolutionButton);
+        solutionBox.getChildren().addAll(solutionLabel, firstSolutionButton, previusSolutionButton, nextSolutionButton, lastSolutionButton,  solveButton);
 
         VBox buttonBox = new VBox(upperBox, solutionBox);
         buttonBox.setSpacing(10);
 
         return buttonBox;
+    }
+
+    private void placeHintPiece() {
+        if(!board.getAvailablePieces().isEmpty()) {
+            Solver.PiecePositionSolutions bestPiecePosition = solver.getNextBestPiecePosition(board.getAvailablePieces());
+            board.placePieceOnBoard(bestPiecePosition.piece(), bestPiecePosition.orientation(),
+                    bestPiecePosition.position().row(), bestPiecePosition.position().column());
+            currentSolutionNumber = 1;
+            updateSolutionStats();
+            updatePiecesWithoutSolutionReset();
+            fixedPiecesOnBoard.add(bestPiecePosition.piece());
+        }
     }
 
     private Button createSolutionButton(String imageName, Runnable action) {

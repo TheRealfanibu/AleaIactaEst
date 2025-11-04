@@ -43,7 +43,7 @@ public class Board {
     }
 
     public void addFixedDice(Dice dice, Field field) {
-        dice.setFixedField(field);
+        dice.setFixedField(field.getPosition());
         field.setFixedDice(dice);
         fixedFields.add(field);
     }
@@ -122,7 +122,7 @@ public class Board {
         }
     }
 
-    public void reset() {
+    public void resetPieces() {
         piecesOnBoard.forEach(this::removePieceFieldInfo);
         piecesOnBoard.clear();
     }
@@ -148,6 +148,10 @@ public class Board {
 
     public List<Piece> getAllPieces() {
         return allPieces;
+    }
+
+    public List<Field> getFixedFields() {
+        return fixedFields;
     }
 
     public Board copy() {
