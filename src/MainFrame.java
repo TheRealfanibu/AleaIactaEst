@@ -474,7 +474,7 @@ public class MainFrame extends Application {
 
     private void placePieceHint() {
         if (!board.getAvailablePieces().isEmpty()) {
-            Solver.PiecePositionSolutions bestPiecePosition = solver.getNextBestPiecePosition(board.getAvailablePieces());
+            Solver.PiecePositionSolutions bestPiecePosition = solver.getNextHintPiecePosition(board.getAvailablePieces());
             board.placePieceOnBoard(bestPiecePosition.piece(), bestPiecePosition.orientation(),
                     bestPiecePosition.position().row(), bestPiecePosition.position().column());
             updateBoardAfterHint();
@@ -484,7 +484,7 @@ public class MainFrame extends Application {
 
     private void placeDiceHint() {
         if (board.getFixedFields().size() < Board.DIM) {
-            Field bestDiceField = solver.getNextBestDicePosition(board.getUnoccupiedFields());
+            Field bestDiceField = solver.getNextHintDicePosition(board.getUnoccupiedFields());
             Dice unfixedDice = findUnfixedDice(bestDiceField).orElseThrow();
             board.addFixedDice(unfixedDice, bestDiceField);
             updateBoardAfterHint();

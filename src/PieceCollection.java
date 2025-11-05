@@ -53,6 +53,8 @@ public class PieceCollection {
             )
     );
 
+    public static int NUM_PIECES = ALL_PIECES.size();
+
     public static List<Piece> createPieceInstances() {
         return ALL_PIECES.stream()
                 .map(piece -> new Piece(piece.getNumOccupations(), piece.getOrientations(), piece.getId()))
