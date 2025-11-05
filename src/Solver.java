@@ -32,6 +32,8 @@ public class Solver {
     private final boolean searchOnlyOneSolution;
     private boolean checkConnectivity;
 
+    private boolean multiThreading;
+
     private final List<Board> solutions;
 
     private final Map<Set<Node>, FieldComponentProperty> fieldComponentProperties;
@@ -62,6 +64,22 @@ public class Solver {
         }
     }
 
+    public Field getNextBestDicePosition(Stream<Field> unoccupiedFields) {
+        Map<Field, List<Board>> solutionsPerField = unoccupiedFields.collect(Collectors.toMap(
+                field -> field,
+                field -> solutions.parallelStream()
+                        .filter(board -> !board.getFieldOnBoard(field.getRow(), field.getColumn()).isOccupied())
+                        .toList()));
+
+        Map.Entry<Field, List<Board>> bestEntry = solutionsPerField.entrySet().stream()
+                .max(Comparator.comparingInt(entry -> entry.getValue().size())).orElseThrow();
+
+        solutions.clear();
+        solutions.addAll(bestEntry.getValue());
+
+        return bestEntry.getKey();
+    }
+
     public PiecePositionSolutions getNextBestPiecePosition(List<Piece> availablePieces) {
         List<PiecePositionSolutions> piecePositionSolutions = new LinkedList<>();
         for (Piece piece : availablePieces) {
@@ -80,7 +98,6 @@ public class Solver {
                 }
             }
         }
-        System.out.println(piecePositionSolutions.size());
         PiecePositionSolutions bestPosition = getBestPiecePositionSolutions(piecePositionSolutions.stream());
 
         solutions.clear();
@@ -100,11 +117,15 @@ public class Solver {
         }));
     }
 
-    public record PiecePositionSolutions(Piece piece, PieceOrientation orientation, FieldPosition position, List<Board> solutions) {
+    public record PiecePositionSolutions(Piece piece, PieceOrientation orientation, FieldPosition position,
+                                         List<Board> solutions) {
     }
+
 
     public void solve(Board board, List<Integer> diceNumbers, List<Integer> fixedDiceNumbers) {
         long startTime = System.currentTimeMillis();
+
+        multiThreading = fixedDiceNumbers.size() <= 4 && board.getPiecesOnBoard().size() < THREAD_SPLIT_AT_PIECE;
 
         prunedTreesCounter = new AtomicInteger();
         notPrunedTreesCounter = new AtomicInteger();
@@ -191,7 +212,7 @@ public class Solver {
                         int[] diceNumbersOccupied = Board.countDiceNumbersOfFields(nextPiece.getOccupiedFields().stream());
                         updateVisibleDiceNumbers(visibleDiceNumbers, diceNumbersOccupied, false);
 
-                        if (board.getPiecesOnBoard().size() == THREAD_SPLIT_AT_PIECE) {
+                        if (multiThreading && board.getPiecesOnBoard().size() == THREAD_SPLIT_AT_PIECE) {
                             Board boardCopy = board.copy();
                             List<Piece> availablePiecesCopy = boardCopy.getAvailablePieces();
                             availablePiecesCopy.sort(PIECE_ORDER);

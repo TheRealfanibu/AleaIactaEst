@@ -132,6 +132,15 @@ public class Board {
         fixedFields.clear();
     }
 
+    public void setFixedFields(List<Field> fixedFields) {
+        this.fixedFields.clear();
+        fixedFields.forEach(fixedField -> {
+            Field thisFixedField = getFieldOnBoard(fixedField.getRow(), fixedField.getColumn());
+            thisFixedField.setFixedDice(fixedField.getFixedDice());
+            this.fixedFields.add(thisFixedField);
+        });
+    }
+
     public List<Piece> getPiecesOnBoard() {
         return piecesOnBoard;
     }

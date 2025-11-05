@@ -51,7 +51,7 @@ public class MainFrame extends Application {
 
     private List<Piece> fixedPiecesOnBoard = new ArrayList<>();
 
-    private boolean showSolution = true;
+    private boolean showSolution = false;
     private Board withoutSolutionBoard;
 
     private boolean anySolutionFound = false;
@@ -68,7 +68,7 @@ public class MainFrame extends Application {
     private PieceOrientation dragPieceOrientation;
     private Field dragFieldOrigin;
     private Field dragFieldToBePlaced;
-    private Button hintPiecesButton;
+    private Button hintPieceButton, hintDiceButton;
 
 
     private void startPieceDragOnBoard(MouseEvent mouseEvent) {
@@ -198,7 +198,11 @@ public class MainFrame extends Application {
 
     private void updateSolution() {
         if (anySolutionFound) {
-            board = showSolution ? solver.getSolutions().get(currentSolutionNumber - 1) : withoutSolutionBoard;
+            Board newBoard = showSolution ? solver.getSolutions().get(currentSolutionNumber - 1) : withoutSolutionBoard;
+            if (board != newBoard) {
+                newBoard.setFixedFields(board.getFixedFields());
+                board = newBoard;
+            }
             updatePiecesWithoutSolutionReset();
         }
     }
@@ -209,7 +213,8 @@ public class MainFrame extends Application {
             String solveButtonText = numberSolutionsFound == 0 ? "No solution." : "Solved.";
             Platform.runLater(() -> solveButton.setText(solveButtonText));
             if (numberSolutionsFound > 0) {
-                hintPiecesButton.setDisable(false);
+                hintPieceButton.setDisable(false);
+                hintDiceButton.setDisable(false);
             }
         }
         solutionStatsUpdater.shutdown();
@@ -288,7 +293,8 @@ public class MainFrame extends Application {
         solveButton.setDisable(false);
         solveButton.setText("Solve");
 
-        hintPiecesButton.setDisable(true);
+        hintPieceButton.setDisable(true);
+        hintDiceButton.setDisable(true);
 
         updateSolutionObjects();
     }
@@ -316,9 +322,7 @@ public class MainFrame extends Application {
                 board.removeFixedDice(alteredDice, field, true);
                 diceChange = true;
             } else {
-                Optional<Dice> optUnfixedDice = Arrays.stream(dices)
-                        .filter(dice -> dice.getNumber() == field.getNumber() && !dice.isFieldFixed())
-                        .findFirst();
+                Optional<Dice> optUnfixedDice = findUnfixedDice(field);
 
                 if (optUnfixedDice.isPresent()) {
                     alteredDice = optUnfixedDice.get();
@@ -333,6 +337,12 @@ public class MainFrame extends Application {
                 resetSolutionObjects();
             }
         }
+    }
+
+    private Optional<Dice> findUnfixedDice(Field field) {
+        return Arrays.stream(dices)
+                .filter(dice -> dice.getNumber() == field.getNumber() && !dice.isFieldFixed())
+                .findFirst();
     }
 
     public void unfixField(Dice dice, FieldPosition fieldPosition) {
@@ -426,14 +436,18 @@ public class MainFrame extends Application {
         resetDicesButton.setFont(buttonFont);
         resetDicesButton.onActionProperty().set(e -> resetDices());
 
-        hintPiecesButton = new Button("Hint");
-        hintPiecesButton.setFont(buttonFont);
-        hintPiecesButton.onActionProperty().set(e -> placeHintPiece());
+        hintPieceButton = new Button("Hint Piece");
+        hintPieceButton.setFont(buttonFont);
+        hintPieceButton.onActionProperty().set(e -> placePieceHint());
+
+        hintDiceButton = new Button("Hint Dice");
+        hintDiceButton.setFont(buttonFont);
+        hintDiceButton.onActionProperty().set(e -> placeDiceHint());
 
         HBox upperBox = new HBox(10);
         upperBox.setAlignment(Pos.CENTER);
         upperBox.getChildren().addAll(
-                showSolutionBox, resetPiecesButton, resetDicesButton, hintPiecesButton);
+                resetPiecesButton, resetDicesButton, solveButton, hintPieceButton, hintDiceButton);
 
         HBox solutionBox = new HBox(10);
         solutionBox.setAlignment(Pos.CENTER);
@@ -450,7 +464,7 @@ public class MainFrame extends Application {
         solutionLabel.setFont(buttonFont);
         updateSolutionObjects();
 
-        solutionBox.getChildren().addAll(solutionLabel, firstSolutionButton, previusSolutionButton, nextSolutionButton, lastSolutionButton,  solveButton);
+        solutionBox.getChildren().addAll(solutionLabel, firstSolutionButton, previusSolutionButton, nextSolutionButton, lastSolutionButton, showSolutionBox);
 
         VBox buttonBox = new VBox(upperBox, solutionBox);
         buttonBox.setSpacing(10);
@@ -458,16 +472,30 @@ public class MainFrame extends Application {
         return buttonBox;
     }
 
-    private void placeHintPiece() {
-        if(!board.getAvailablePieces().isEmpty()) {
+    private void placePieceHint() {
+        if (!board.getAvailablePieces().isEmpty()) {
             Solver.PiecePositionSolutions bestPiecePosition = solver.getNextBestPiecePosition(board.getAvailablePieces());
             board.placePieceOnBoard(bestPiecePosition.piece(), bestPiecePosition.orientation(),
                     bestPiecePosition.position().row(), bestPiecePosition.position().column());
-            currentSolutionNumber = 1;
-            updateSolutionStats();
-            updatePiecesWithoutSolutionReset();
+            updateBoardAfterHint();
             fixedPiecesOnBoard.add(bestPiecePosition.piece());
         }
+    }
+
+    private void placeDiceHint() {
+        if (board.getFixedFields().size() < Board.DIM) {
+            Field bestDiceField = solver.getNextBestDicePosition(board.getUnoccupiedFields());
+            Dice unfixedDice = findUnfixedDice(bestDiceField).orElseThrow();
+            board.addFixedDice(unfixedDice, bestDiceField);
+            updateBoardAfterHint();
+            unfixedDice.draw();
+        }
+    }
+
+    private void updateBoardAfterHint() {
+        currentSolutionNumber = 1;
+        updateSolutionStats();
+        updatePiecesWithoutSolutionReset();
     }
 
     private Button createSolutionButton(String imageName, Runnable action) {
