@@ -1,3 +1,5 @@
+package com.fanibu.aleaIactaEst;
+
 import org.graphstream.algorithm.ConnectedComponents;
 import org.graphstream.graph.Node;
 import org.graphstream.graph.implementations.DefaultGraph;

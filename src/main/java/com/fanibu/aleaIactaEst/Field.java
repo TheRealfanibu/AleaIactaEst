@@ -1,3 +1,5 @@
+package com.fanibu.aleaIactaEst;
+
 public class Field {
 
     private Piece occupationPiece;

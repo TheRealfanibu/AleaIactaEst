@@ -1,3 +1,5 @@
+package com.fanibu.aleaIactaEst;
+
 import java.util.Arrays;
 
 public class PieceOrientation {

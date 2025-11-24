@@ -1,3 +1,5 @@
+package com.fanibu.aleaIactaEst;
+
 import javafx.animation.RotateTransition;
 import javafx.scene.canvas.Canvas;
 import javafx.scene.canvas.GraphicsContext;

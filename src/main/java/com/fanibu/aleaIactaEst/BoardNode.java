@@ -1,3 +1,5 @@
+package com.fanibu.aleaIactaEst;
+
 import org.graphstream.graph.implementations.AbstractGraph;
 import org.graphstream.graph.implementations.SingleNode;
 

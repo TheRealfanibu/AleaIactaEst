@@ -1,3 +1,5 @@
+package com.fanibu.aleaIactaEst;
+
 import javafx.application.Application;
 import javafx.application.Platform;
 import javafx.geometry.Bounds;
@@ -499,7 +501,7 @@ public class MainFrame extends Application {
     }
 
     private Button createSolutionButton(String imageName, Runnable action) {
-        Image image = new Image(Objects.requireNonNull(getClass().getResourceAsStream("res/" + imageName + ".png")));
+        Image image = new Image(Objects.requireNonNull(getClass().getClassLoader().getResourceAsStream(imageName + ".png")));
         Button solutionButton = new Button();
         ImageView imageView = new ImageView(image);
         imageView.setFitHeight(30);

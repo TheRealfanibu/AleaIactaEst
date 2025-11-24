@@ -1,3 +1,5 @@
+package com.fanibu.aleaIactaEst;
+
 import javafx.geometry.Point2D;
 import javafx.geometry.Pos;
 import javafx.scene.canvas.Canvas;

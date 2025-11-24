@@ -1,3 +1,5 @@
+package com.fanibu.aleaIactaEst;
+
 import org.graphstream.algorithm.ConnectedComponents;
 import org.graphstream.algorithm.ConnectedComponents.ConnectedComponent;
 import org.graphstream.graph.Graph;
